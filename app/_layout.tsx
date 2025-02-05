@@ -1,17 +1,18 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import React from 'react'
-import {Stack} from 'expo-router'
+import { Stack } from 'expo-router'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
-const _layout = () => {
+export default function Layout() {
   return (
-    <Stack
-    screenOptions={{
-      headerShown:false,
-    }}
-    />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    </GestureHandlerRootView>
   )
 }
-
-export default _layout
 
 const styles = StyleSheet.create({})

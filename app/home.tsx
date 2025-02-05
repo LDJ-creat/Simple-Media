@@ -1,35 +1,19 @@
-import { StyleSheet, Text, View,Alert,Button,Pressable } from 'react-native'
+import { StyleSheet, Text, View,Alert,Button,Pressable,FlatList } from 'react-native'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
 import Icon from  '@/assets/icons'
-import React from 'react'
+import React, { useState } from 'react'
 import {useRouter} from 'expo-router'
 import Avatar from '@/components/Avatar'
+import { getPost, Post } from '@/services/postServices'
+import {Video} from 'expo-av'
+import PostCard from './PostCard'
+import Loading from '@/components/Loading'
 
 const home = () => {
     const router = useRouter()
-//     const Logout = () => {
-//         router.push('/Login')
-//     }
-//     const handleLogout = async () => {
-//     Alert.alert(
-//       "Confirm",
-//       "Are you sure you want to log out",
-//       [
-//         {
-//           text: "Cancel",
-//           onPress: () => console.log("modal canceled"),
-//           style: "cancel"
-//         },
-//         {
-//           text: "Logout",
-//           onPress: () => Logout(),
-//           style: "destructive"
-//         }
-//       ]
-//     );
-//   }
+    const [posts,setPosts] = useState<getPost[]>([])
 
   return (
     <ScreenWrapper bg="white">
@@ -39,10 +23,10 @@ const home = () => {
 
           <View style={styles.icons}>
             <Pressable onPress={()=>router.push('./notification')}>
-                <Icon name="heart" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
+                <Icon name="heart" size={hp(3.2)} strokeWidth={2} color="red"/>
             </Pressable>
             <Pressable onPress={()=>router.push('./newPost')}>
-                <Icon name="plus" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
+                <Icon name="plus" size={hp(3.2)} strokeWidth={2} color="black"/>
             </Pressable>
             <Pressable onPress={()=>router.push('./profile')}>
                 <Avatar 
@@ -53,8 +37,25 @@ const home = () => {
             </Pressable>
           </View>
         </View>
+
+        <FlatList
+            data={posts}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listStyle}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({item}) => (
+                <PostCard
+                item={item}
+                router={router}
+                />
+            )}
+            ListFooterComponent={(
+                <View style={{marginVertical: posts.length==0?200:30}}>
+                    <Loading/>
+                </View>
+            )}
+        />
       </View>
-      {/* <Button title="logout" onPress={handleLogout}></Button> */}
     </ScreenWrapper>
   )
 }
@@ -114,5 +115,10 @@ const styles = StyleSheet.create({
         color:"white",
         fontSize:hp(1.2),
         fontWeight:'700',
+    },
+    media: {
+        width: wp(100),
+        height: hp(30),
+        borderRadius: theme.radius.md,
     }
 })

@@ -118,7 +118,7 @@ const editProfile = () => {
                         rounded={theme.radius.xxl*1.4}
                         />
                         <Pressable style={styles.cameraIcon} onPress={pickImage}>
-                            <Icon name="camera" size={20} strokeWidth={2.5}/>
+                            <Icon name="camera" size={20} strokeWidth={2.5} color="black"/>
                         </Pressable>
                     </View> 
                     <Text style={{fontSize:hp(1.5),color:theme.colors.text}}>Please fill your profile details</Text>

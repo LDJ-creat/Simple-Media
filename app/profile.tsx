@@ -15,10 +15,10 @@ const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router,
   
   return (
       <View style={{flex:1,backgroundColor:'white',paddingHorizontal:wp(4)}}>
-        <View>
+        <View style={{position:"relative"}}>
           <Header title={"Profile"} showBackButton={true} mb={30}/>
-          <TouchableOpacity>
-            <Icon name="logout" color={theme.colors.rose} onPress={handleLogout}/>
+          <TouchableOpacity style={styles.logoutButton}>
+            <Icon name="logout" color={theme.colors.rose} onPress={handleLogout} />
           </TouchableOpacity>
         </View>
 
@@ -31,7 +31,7 @@ const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router,
                 rounded={theme.radius.xxl*1.4}
               />
               <Pressable style={styles.editIcon} onPress={()=>router.push('./editProfile')}>
-                <Icon name="edit" strokeWidth={2.5} size={20}/>
+                <Icon name="edit" strokeWidth={2.5} size={20} color="black"/>
               </Pressable>
             </View>
 
@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
   },
   info:{
     gap:10,
+    borderBottomWidth: 1
   },
   infoText:{
     fontSize:hp(1.6),
@@ -143,9 +144,11 @@ const styles = StyleSheet.create({
   logoutButton:{
     position:'absolute',
     right:0,
+    top: -60,
     padding:5,
     borderRadius:theme.radius.sm,
     backgroundColor:'#fee2e2',
+    zIndex: 1
   },
   listStyle:{
     paddingHorizontal:wp(4),

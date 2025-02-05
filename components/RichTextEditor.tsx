@@ -10,41 +10,55 @@ interface Props {
 
 const RichTextEditor = ({editorRef,onChange}: Props) => {
   return (
-    <View>
+    <View style={styles.container}>
       <RichToolbar
+        editor={editorRef}
         actions={[
-          actions.setStrikethrough,
-          actions.removeFormat,
           actions.setBold,
           actions.setItalic,
+          actions.setUnderline,
+          actions.heading1,
+          actions.heading2,
+          actions.insertBulletsList,
           actions.insertOrderedList,
-          actions.blockquote,
           actions.alignLeft,
           actions.alignCenter,
           actions.alignRight,
-          actions.code,
-          actions.line,
-          actions.heading1,
-          actions.heading4,//自定义图标
         ]}
-        //自定义图标
         iconMap={{
-          [actions.heading1]:({tintColor}: {tintColor: string})=><Text style={{color:tintColor}}>H1</Text>,
-          [actions.heading4]:({tintColor}: {tintColor: string})=><Text style={{color:tintColor}}>H4</Text>
+          [actions.heading1]: ({tintColor}: {tintColor: string}) => (
+            <Text style={[styles.tib, {color: tintColor}]}>H1</Text>
+          ),
+          [actions.heading2]: ({tintColor}: {tintColor: string}) => (
+            <Text style={[styles.tib, {color: tintColor}]}>H2</Text>
+          ),
         }}
         style={styles.richBar}
         flatContainerStyle={styles.flatStyle}
         selectedIconTint={theme.colors.primaryDark}
-        editor={editorRef}
-        disabled={false}
       />
 
       <RichEditor
         ref={editorRef}
+        initialContentHTML={`<p></p>`}
         containerStyle={styles.rich}
-        editorStyle={styles.contentStyle}
+        style={styles.editor}
+        editorInitializedCallback={() => console.log('Editor initialized')}
         placeholder={"What's on your mind"}
         onChange={onChange}
+        initialHeight={200}
+        editorStyle={{
+          contentCSSText: `
+            * {
+              font-family: sans-serif;
+              color: ${theme.colors.textDark};
+            }
+            body {
+              background-color: transparent;
+              padding: 10px;
+            }
+          `
+        }}
       />
     </View>
   )
@@ -53,28 +67,32 @@ const RichTextEditor = ({editorRef,onChange}: Props) => {
 export default RichTextEditor
 
 const styles = StyleSheet.create({
-  richBar:{
-    borderTopRightRadius:theme.radius.xl,
-    borderTopLeftRadius:theme.radius.xl,
-    backgroundColor:theme.colors.gray
-
+  container: {
+    flex: 1,
   },
-  rich:{
-    minHeight:240,
-    flex:1,
-    borderWidth:1.5,
-    borderTopWidth:0,
-    borderBottomLeftRadius:theme.radius.xl,
-    borderBottomRightRadius:theme.radius.xl,
-    backgroundColor:theme.colors.gray,
-    padding:5,
+  richBar: {
+    borderTopRightRadius: theme.radius.xl,
+    borderTopLeftRadius: theme.radius.xl,
+    backgroundColor: theme.colors.gray
   },
-  contentStyle:{
-    color:theme.colors.textDark
+  rich: {
+    minHeight: 200,
+    flex: 1,
+    borderWidth: 1.5,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: theme.radius.xl,
+    borderBottomRightRadius: theme.radius.xl,
+    backgroundColor: theme.colors.gray,
   },
-  flatStyle:{
-    paddingHorizontal:8,
-    gap:12,
+  editor: {
+    flex: 1,
+  },
+  flatStyle: {
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  tib: {
+    textAlign: 'center',
+    fontSize: 16,
   }
-
 })

@@ -14,6 +14,10 @@ import camera from './camera'
 import signature from './signature'
 import Image from '@/assets/icons/image'
 import video from '@/assets/icons/video'
+import deleteIcon from '@/assets/icons/delete'
+import dotsHorizontal from './dotsHorizontal'
+import comment from "@/assets/icons/comment"
+import share from '@/assets/icons/share'
 import { theme } from '../../constants/theme'
 import { SvgProps } from 'react-native-svg'
 
@@ -38,17 +42,21 @@ const icons = {
     camera:camera,
     Image:Image,
     video:video,
+    delete:deleteIcon,
+    dotsHorizontal:dotsHorizontal,
+    comment:comment,
+    share:share
 }
 
 const Icon = ({name, ...props}: IconProps) => {
     const IconComponent = icons[name];
     return (
         <IconComponent
+            {...props}
             height={props.size || 24}
             width={props.size || 24}
             strokeWidth={props.strokeWidth || 1.9}
-            color={theme.colors.textLight}
-            {...props}
+            color={props.color || theme.colors.textLight}
         />
     )
 }
