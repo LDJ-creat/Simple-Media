@@ -8,3 +8,7 @@ const wp = (percentage: number) => {
     return (deviceWidth*percentage)/100;
 }
 export {hp,wp,deviceWidth,deviceHeight};
+
+export const stripHtmlTags=(html:string)=>{
+    return html.replace(/<[^>]*>?/g, '');
+}

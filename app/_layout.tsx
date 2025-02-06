@@ -11,8 +11,16 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen name="postDetail" options={{
+        headerShown: true,
+        headerTitle: '帖子详情',
+        headerBackTitle: '返回',
+        headerBackVisible: true,
+      }} />
     </GestureHandlerRootView>
   )
 }
+
 
 const styles = StyleSheet.create({})

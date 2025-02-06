@@ -10,10 +10,16 @@ import { getPost, Post } from '@/services/postServices'
 import {Video} from 'expo-av'
 import PostCard from './PostCard'
 import Loading from '@/components/Loading'
+import { useUser } from '@/store/useUser'
 
 const home = () => {
     const router = useRouter()
+    const user = useUser(state => state.user);
     const [posts,setPosts] = useState<getPost[]>([])
+    const [hasMore,setHasMore] = useState<boolean>(true)
+    const getMoreData=()=>{
+
+    }
 
   return (
     <ScreenWrapper bg="white">
@@ -30,7 +36,7 @@ const home = () => {
             </Pressable>
             <Pressable onPress={()=>router.push('./profile')}>
                 <Avatar 
-                uri=''//后续替换成向后端请求的数据，无设置则为空
+                uri={user?.avatar||""}//后续替换成向后端请求的数据，无设置则为空
                 size={hp(4.5)}
                 rounded={theme.radius.sm}
                 style={{borderWidth:2}}/>
@@ -49,9 +55,15 @@ const home = () => {
                 router={router}
                 />
             )}
-            ListFooterComponent={(
+            onEndReached={getMoreData}
+            onEndReachedThreshold={0.1}
+            ListFooterComponent={hasMore?(
                 <View style={{marginVertical: posts.length==0?200:30}}>
                     <Loading/>
+                </View>
+            ):(
+                <View style={{marginVertical:30}}>
+                    <Text style={styles.noPosts}>No more posts</Text>
                 </View>
             )}
         />

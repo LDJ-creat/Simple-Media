@@ -18,6 +18,8 @@ import deleteIcon from '@/assets/icons/delete'
 import dotsHorizontal from './dotsHorizontal'
 import comment from "@/assets/icons/comment"
 import share from '@/assets/icons/share'
+import reload from '@/assets/icons/reload'
+import send from '@/assets/icons/send'
 import { theme } from '../../constants/theme'
 import { SvgProps } from 'react-native-svg'
 
@@ -45,7 +47,9 @@ const icons = {
     delete:deleteIcon,
     dotsHorizontal:dotsHorizontal,
     comment:comment,
-    share:share
+    share:share,
+    reload:reload,
+    send:send,
 }
 
 const Icon = ({name, ...props}: IconProps) => {

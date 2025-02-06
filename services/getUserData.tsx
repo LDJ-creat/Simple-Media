@@ -1,4 +1,5 @@
 export interface userData{
+    userID:string,
     userName:string,
     avatar:string
     email:string
@@ -8,6 +9,7 @@ export interface userData{
 
 export const getUserData=()=>{
     let userData: userData = {
+        userID: '',
         userName: '',
         avatar:'',
         email: '',

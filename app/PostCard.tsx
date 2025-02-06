@@ -1,22 +1,74 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Share } from 'react-native'
+import React, { useState } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
 import Avatar from '@/components/Avatar'
-import {getPost} from "@/services/postServices"
+import {getPost,createPostLike,removePostLike} from "@/services/postServices"
 import moment from "moment"
 import Icon from  '@/assets/icons'
 import RenderHtml from "react-native-render-html"
 import { Video,ResizeMode } from 'expo-av'
+import { useUser } from '@/store/useUser'
+import { stripHtmlTags } from '@/helper/common'
 
 interface PostCardProps {
-    item: getPost;
+    item?: getPost;
     router: any;
     hasShadow?: boolean;
+    showMoreIcons?: boolean;
+    commentsCount?:number;
 }
 
-const PostCard: React.FC<PostCardProps> = ({item, router, hasShadow = true}) => {
-    const liked=false
+const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true}) => {
+    const user=useUser(state=>state.user)
+    const [likes,setLikes]=useState(item?.postLikes || [])
+    // const [comments,setComments]=useState(item?.comments || [])
+    const liked=likes?.find(like=>like==user?.userID)?true:false
+    const onLike =async () => {
+        if (!user?.userID || !item?.postID) return;
+        
+        let data = {
+            postID: item.postID,
+            userID: user.userID,
+        }
+        if(liked){
+            let updateLikes=likes?.filter(like=>like!=user.userID)
+            setLikes([...updateLikes])
+            removePostLike(data)
+        }else{
+            setLikes([...likes, user.userID])
+            createPostLike(data)
+        }
+    }
+
+    const share=async()=>{
+        let content = stripHtmlTags(item?.post?.body || '')
+        let mediaUrls: string[] = []
+        
+        // 收集所有媒体URL
+        if (item?.post?.image) {
+            mediaUrls = [...item.post.image]
+        }
+        if (item?.post?.video&&item?.post?.image?.length==0) {
+            mediaUrls = [...mediaUrls, ...item.post.video]
+        }
+
+        // 准备分享内容
+        const shareContent = {
+            message: content,
+            // 如果有媒体文件，添加第一个媒体文件作为分享URL
+            ...(mediaUrls.length > 0 && { url: mediaUrls[0] })
+        }
+
+        try {
+            await Share.share(shareContent)
+        } catch (error) {
+            console.error('分享失败:', error)
+        }
+        //方案二：
+        // 先下载图片和视频再利用本地url分享
+    }
+
 
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
         const isVideo = item.includes('.mp4') || item.includes('.mov')||item.includes('VID');
@@ -69,25 +121,33 @@ const PostCard: React.FC<PostCardProps> = ({item, router, hasShadow = true}) => 
     
   }
   const postTime=moment(item?.create_at).format("YYYY-MM-DD HH:mm")
-  const openPostDetails=()=>{
 
+  const openPostDetails=()=>{
+    if(!showMoreIcons) return null;
+    // 跳转至帖子详情页面---通过URL传递postID以实现详情页通过postID获取对应帖子的详情
+    router.push({pathname:'/postDetail',params:{postID:item?.postID}})
   }
+
+
   return (
     <View style={[styles.container,hasShadow && shadowStyles]}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Avatar
             size={hp(4.5)}
-            uri={item?.avatar}
+            uri={item?.avatar||""}
             rounded={theme.radius.md}
           />
           <View style={{gap:2}}>
             <Text style={styles.userName}>{item?.userName}</Text>
             <Text style={styles.postTime}>{postTime}</Text>
           </View>    
-          <TouchableOpacity onPress={openPostDetails}>
-            <Icon name="dotsHorizontal" size={hp(3.4)} strokeWidth={3} color="black"/>
-          </TouchableOpacity>
+          {showMoreIcons && (
+            <TouchableOpacity onPress={openPostDetails}>
+              <Icon name="dotsHorizontal" size={hp(3.4)} strokeWidth={3} color="black"/>
+            </TouchableOpacity>
+          )}
+
         </View>
 
         <View style={styles.content}>
@@ -117,22 +177,21 @@ const PostCard: React.FC<PostCardProps> = ({item, router, hasShadow = true}) => 
 
       <View style={styles.footer}>
         <View style={styles.footerButton}>
-          <TouchableOpacity>
-          <Icon name="heart" size={24} strokeWidth={2} fill={liked?"red":"transparent"} color={liked?"red":"black"}/>
+          <TouchableOpacity onPress={onLike}>
+            <Icon name="heart" size={24} strokeWidth={2} fill={liked?"red":"transparent"} color={liked?"red":"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>0</Text>
+          <Text style={styles.count}>{likes?.length}</Text>
         </View>
         <View style={styles.footerButton}>
-          <TouchableOpacity>
-          <Icon name="comment" size={24} strokeWidth={2} color={"black"}/>
+          <TouchableOpacity onPress={openPostDetails}>
+            <Icon name="comment" size={24} strokeWidth={2} color={"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>0</Text>
+          <Text style={styles.count}>{commentsCount}</Text>
         </View>
         <View style={styles.footerButton}>
-          <TouchableOpacity>
-          <Icon name="share" size={24} strokeWidth={2} color={"black"}/>
+          <TouchableOpacity onPress={share}>
+            <Icon name="share" size={24} strokeWidth={2} color={"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>0</Text>
         </View>
       </View>
     </View>
