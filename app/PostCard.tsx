@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Share } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Share,Alert } from 'react-native'
 import React, { useState } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
@@ -17,9 +17,14 @@ interface PostCardProps {
     hasShadow?: boolean;
     showMoreIcons?: boolean;
     commentsCount?:number;
+    showDelete?:boolean,
+    onDeletePost?:()=>void,
+    onEditPost?:()=>void,
 }
 
-const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true}) => {
+
+
+const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
     const user=useUser(state=>state.user)
     const [likes,setLikes]=useState(item?.postLikes || [])
     // const [comments,setComments]=useState(item?.comments || [])
@@ -69,6 +74,19 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
         // 先下载图片和视频再利用本地url分享
     }
 
+    const handleDeletePost=()=>{
+      Alert.alert("Confirm","Are you sure you want to delete this post?",[
+        {
+          text:"Cancel",
+          style:"cancel"
+        },
+        {
+          text:"Delete",
+          style:"destructive",
+          onPress:onDeletePost
+        }
+      ])
+    }
 
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
         const isVideo = item.includes('.mp4') || item.includes('.mov')||item.includes('VID');
@@ -94,39 +112,39 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
           </View>
         );
       };
-  const textStyle={
-    color:theme.colors.dark,
-    fontSize:hp(1.75),
-  }
-  const tagStyles={
-    div:textStyle,
-    p:textStyle,
-    span:textStyle,
-    ol:textStyle,
-    h1:{
-        color:theme.colors.dark
-    },
-    h2:{
-        color:theme.colors.dark
-    }
-  }
-  const shadowStyles={
-    shadowOffset:{
-        width:0,
-        height:2
-    },
-    shadowOpacity:0.06,
-    shadowRadius:6,
-    elevation:1,     
-    
-  }
-  const postTime=moment(item?.create_at).format("YYYY-MM-DD HH:mm")
+      const textStyle={
+        color:theme.colors.dark,
+        fontSize:hp(1.75),
+      }
+      const tagStyles={
+        div:textStyle,
+        p:textStyle,
+        span:textStyle,
+        ol:textStyle,
+        h1:{
+            color:theme.colors.dark
+        },
+        h2:{
+            color:theme.colors.dark
+        }
+      }
+      const shadowStyles={
+        shadowOffset:{
+            width:0,
+            height:2
+        },
+        shadowOpacity:0.06,
+        shadowRadius:6,
+        elevation:1,     
+        
+      }
+      const postTime=moment(item?.create_at).format("YYYY-MM-DD HH:mm")
 
-  const openPostDetails=()=>{
-    if(!showMoreIcons) return null;
-    // 跳转至帖子详情页面---通过URL传递postID以实现详情页通过postID获取对应帖子的详情
-    router.push({pathname:'/postDetail',params:{postID:item?.postID}})
-  }
+      const openPostDetails=()=>{
+        if(!showMoreIcons) return null;
+        // 跳转至帖子详情页面---通过URL传递postID以实现详情页通过postID获取对应帖子的详情
+        router.push({pathname:'/postDetail',params:{postID:item?.postID}})
+      }
 
 
   return (
@@ -148,7 +166,22 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
             </TouchableOpacity>
           )}
 
+
+          {
+            showDelete && (
+              <View style={styles.actions}>
+                <TouchableOpacity onPress={onEditPost}>
+                  <Icon name="edit" size={hp(3.4)} strokeWidth={3} color="black"/>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeletePost}>
+                  <Icon name="delete" size={hp(3.4)} strokeWidth={3} color="black"/>
+                </TouchableOpacity>
+              </View>
+            )
+          }
         </View>
+
+
 
         <View style={styles.content}>
           <View style={styles.postBody}>

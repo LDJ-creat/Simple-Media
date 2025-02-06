@@ -1,12 +1,12 @@
 import { StyleSheet, Text, View,ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { getPost, getPostDetails,postComment,commentsData,deleteComment } from '@/services/postServices'
+import { getPost, getPostDetails,postComment,commentsData,deleteComment,deletePost} from '@/services/postServices'
 import PostCard from './PostCard'
 import Loading from '@/components/Loading'
 import  Input  from '@/components/Input'
 import { theme } from '@/constants/theme'
-import { hp } from '@/helper/common'
+import { hp,wp } from '@/helper/common'
 import Icon from '@/assets/icons'
 import { useUser } from '@/store/useUser'
 import CommentItem from './CommentItem'
@@ -34,6 +34,24 @@ const postDetail = () => {
         await deleteComment(data)
 
     }
+    
+
+    const onDeletePost=async (postID:string)=>{
+        await deletePost(postID as string)
+        //home页面中通过订阅数据库变化，会自动更新
+        router.back()
+    }
+
+    const onEditPost=async (post:getPost)=>{
+        router.back()
+        router.push({
+            pathname: '/newPost',
+            params:{
+                post:JSON.stringify(post),
+            }
+        })
+    }
+
 
 
     useEffect(()=>{
@@ -84,16 +102,28 @@ const postDetail = () => {
     if(!post){
         return(
             <View style={[styles.center,{justifyContent:'flex-start',marginTop:100}]}>
-                <Text>Post not found</Text>
+                <Text style={styles.notFound}>Post not found</Text>
             </View>
         )
+
 
     }
 
   return (
     <View style={styles.container}>
       <ScrollView  showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        <PostCard item={post} commentsCount={comments.length} router={router} hasShadow={false}  showMoreIcons={false}/>
+        <PostCard 
+            item={post} 
+            commentsCount={comments.length} 
+            router={router} hasShadow={false}  
+            showMoreIcons={false}
+            showDelete={post?.userID===user?.userID}
+            onDeletePost={()=>onDeletePost(postID as string)}
+            onEditPost={()=>onEditPost(post)}
+        />
+
+
+
 
         <View style={styles.inputContainer}>
             <Input
@@ -162,12 +192,16 @@ export default postDetail
 const styles = StyleSheet.create({
     container:{
         flex:1,
+        backgroundColor:'white',
     },
-    list:{
 
+    list:{
+        paddingHorizontal:wp(4),
     },
     center:{
-
+        flex:1,
+        alignItems:'center',
+        justifyContent:'center',
     },
     inputContainer:{
         flexDirection:'row',
@@ -175,10 +209,24 @@ const styles = StyleSheet.create({
         gap:10,
     },
     loading:{
-
+        height:hp(5.8),
+        width:hp(5.8),
+        justifyContent:'center',
+        alignItems:'center',
+        transform:[{scale:1.3}]
     },
     sendIcon:{
-
+        borderColor:theme.colors.primary,
+        borderRadius:theme.radius.lg,
+        borderCurve:'continuous',
+        height:hp(5.8),
+        width:hp(5.8),
+    },
+    notFound:{
+        fontSize:hp(2.5),
+        color:theme.colors.text,
+        fontWeight:'600',
     }
+
 
 })

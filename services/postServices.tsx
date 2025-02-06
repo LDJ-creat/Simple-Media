@@ -2,7 +2,7 @@ export interface Post{
     body:string,
     image:string[],
     video:string[],
-    
+    postID?: string,
 }
 export interface commentsData{
     userID:string,
@@ -88,6 +88,22 @@ export interface deleteCommentData{
     userID:string,
 }
 export const deleteComment=async (data:deleteCommentData)=>{
+    try{
+
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const deletePost=async (postID:string)=>{
+    try{
+
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export const onEditPost=async (post:Post)=>{
     try{
 
     }catch(error){

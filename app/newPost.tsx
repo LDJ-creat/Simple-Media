@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Header from '@/components/Header'
 import Button from '@/components/Button'
-import {Post,createOrUpdatePost} from '@/services/postServices'
-import {useRouter} from  'expo-router'
+import {Post,createOrUpdatePost, onEditPost} from '@/services/postServices'
+import {useRouter,useLocalSearchParams} from  'expo-router'
 import { useUser } from '@/store/useUser'
 import * as ImagePicker from 'expo-image-picker'
 import { hp,wp } from '@/helper/common'
@@ -23,10 +23,26 @@ const NewPost = () => {
   const [content, setContent] = useState('');
   const [postImages, setPostImages] = useState<string[]>([]);
   const [postVideos, setPostVideos] = useState<string[]>([]);
+  const editPost = JSON.parse(useLocalSearchParams().post as string)
+  
+
+  useEffect(()=>{
+    if(editPost){
+      setContent(editPost.post.body)
+      setPostImages(editPost.post.image)
+      setPostVideos(editPost.post.video)
+      // 注入原内容到WebView
+      webViewRef.current?.injectJavaScript(`
+        setContent(\`${editPost.post.body}\`);
+        true;
+      `);
+    }
+  },[])
 
   const onMessage = (event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+
       if (data.type === 'content') {
         setContent(data.content);
       } else if (data.type === 'requestLink') {
@@ -62,7 +78,8 @@ const NewPost = () => {
   const post: Post = {
     body: content,
     image: postImages,
-    video: postVideos
+    video: postVideos,
+    postID: editPost?.post.postID // 添加postID用于更新
   }
 
 
@@ -71,13 +88,18 @@ const NewPost = () => {
       Alert.alert('Post',"please choose an image/video or add post body")
       return
     }
-    createOrUpdatePost(post)
+    if(editPost){
+      await onEditPost(post)
+    }else{
+      await createOrUpdatePost(post)
+    }
     setLoading(true)
     //清空显示区域
     setContent('')
     setPostImages([])
     setPostVideos([])
     setLoading(false)
+
   }
 
 
@@ -426,7 +448,7 @@ const NewPost = () => {
           alignSelf: 'center',
           marginBottom:10,
         }}
-        title='Post'
+        title={editPost?'Update':'Post'}
         loading={loading}
         hasShadow={false}
         onPress={onSubmit}/>
