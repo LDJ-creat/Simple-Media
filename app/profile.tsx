@@ -1,5 +1,5 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
-import React, { useEffect } from 'react'
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import Header from '@/components/Header'
 import { wp ,hp} from '@/helper/common'
@@ -10,6 +10,10 @@ import { useRouter, Router } from 'expo-router'
 import Avatar from '@/components/Avatar'
 import { userData,getUserData } from '@/services/getUserData'
 import { useUser } from '@/store/useUser'
+import { getMyPosts, getPost } from '@/services/postServices'
+import { getPosts } from '@/services/postServices'
+import Loading from '@/components/Loading'
+import PostCard from './PostCard'
 
 const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router, handleLogout: () => void }) => {
   
@@ -63,6 +67,20 @@ const profile = () => {
   const router = useRouter();
   const setUser = useUser(state => state.setUser);
   const userData = getUserData();
+  const user = useUser(state => state.user);
+  const [posts,setPosts] = useState<getPost[]>([])
+  const [hasMore,setHasMore] = useState<boolean>(true)
+
+  useEffect(()=>{
+      const fetchPosts = async () => {
+          const response = await getMyPosts(user?.userID as string)
+          setPosts(response)
+      }
+      fetchPosts()
+  },[])
+  const getMoreData=()=>{
+
+  }
   useEffect(() => {
     setUser(userData);
   }, []);
@@ -90,7 +108,31 @@ const profile = () => {
   }
   return (
     <ScreenWrapper bg="white">
-      <UserHeader user={userData} handleLogout={handleLogout} router={router} />
+      <FlatList
+            data={posts}
+            ListHeaderComponent={<UserHeader user={userData} handleLogout={handleLogout} router={router} />}
+            ListHeaderComponentStyle={{marginBottom:10}}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listStyle}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({item}) => (
+                <PostCard
+                item={item}
+                router={router}
+                />
+            )}
+            onEndReached={getMoreData}
+            onEndReachedThreshold={0.1}
+            ListFooterComponent={hasMore?(
+                <View style={{marginVertical: posts.length==0?100:30}}>
+                    <Loading/>
+                </View>
+            ):(
+                <View style={{marginVertical:30}}>
+                    <Text style={styles.noPosts}>No more posts</Text>
+                </View>
+            )}
+        />
     </ScreenWrapper>
   )
 }

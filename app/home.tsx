@@ -3,11 +3,10 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
 import Icon from  '@/assets/icons'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {useRouter} from 'expo-router'
 import Avatar from '@/components/Avatar'
-import { getPost, Post } from '@/services/postServices'
-import {Video} from 'expo-av'
+import { getPost, Post,getPosts } from '@/services/postServices'
 import PostCard from './PostCard'
 import Loading from '@/components/Loading'
 import { useUser } from '@/store/useUser'
@@ -17,6 +16,14 @@ const home = () => {
     const user = useUser(state => state.user);
     const [posts,setPosts] = useState<getPost[]>([])
     const [hasMore,setHasMore] = useState<boolean>(true)
+
+    useEffect(()=>{
+        const fetchPosts = async () => {
+            const response = await getPosts()
+            setPosts(response)
+        }
+        fetchPosts()
+    },[])
     const getMoreData=()=>{
 
     }

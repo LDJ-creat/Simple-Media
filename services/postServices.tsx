@@ -30,11 +30,13 @@ export const createOrUpdatePost =async (post:Post)=>{
 }
 
 export const getPosts =async ()=>{
+    const response:getPost[]=[]
     try{
 
     }catch(error){
         console.log(error)
     }
+    return response
 }
 
 interface likesData{
@@ -109,4 +111,14 @@ export const onEditPost=async (post:Post)=>{
     }catch(error){
         console.log(error)
     }
+}
+
+export const getMyPosts=async(userID:string)=>{
+    const response:getPost[]=[]
+    try{
+
+    }catch(error){
+        console.log(error)
+    }
+    return response
 }
