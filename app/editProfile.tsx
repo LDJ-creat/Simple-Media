@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Pressable, Alert } from 'react-native'
+import { StyleSheet, Text, View, ScrollView, Pressable, Alert,Platform } from 'react-native'
 import React, { useEffect } from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import Header from '@/components/Header'
@@ -60,7 +60,7 @@ const editProfile = () => {
             if (!result.canceled) {
                 //上传到服务器后返回不依赖本地的永久URL并用此更新前端数据
               setFormData({...formData, avatar: result.assets[0].uri});
-              updateUser({avatar: result.assets[0].uri});
+              
             }
           }
         },
@@ -75,7 +75,7 @@ const editProfile = () => {
             });
             if (!result.canceled) {
               setFormData({...formData, avatar: result.assets[0].uri});
-              updateUser({avatar: result.assets[0].uri});
+              
             }
           }
         }
@@ -84,14 +84,20 @@ const editProfile = () => {
   };
 
   const submit = async () => {    
-    if(!formData.userName){
+    if(!formData.userName.trim()){
         Alert.alert("There should be a username")
         return
     }
     setLoading(true);
     try {
       // 调用API更新用户信息
-      // const response = await updateUserAPI(formData);
+      const data = new FormData();
+      data.append('avatar', {
+        uri: formData.avatar,
+        type: 'image/jpeg',
+        name: 'avatar.jpg'
+      } as any);
+
       
       // 更新本地状态
       updateUser(formData);
@@ -103,6 +109,9 @@ const editProfile = () => {
       setLoading(false);
     }
   }
+
+
+
 
   return (
     <ScreenWrapper bg="white">

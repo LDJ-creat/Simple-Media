@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { userData } from '@/services/getUserData'
 
+
 interface UserState {
   user: userData | null;
   setUser: (user: userData) => void;

@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image } 
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Header from '@/components/Header'
 import Button from '@/components/Button'
-import {Post,createOrUpdatePost, onEditPost} from '@/services/postServices'
+import {Post,createOrUpdatePost, onEditPost,mediaData} from '@/services/postServices'
 import {useRouter,useLocalSearchParams} from  'expo-router'
 import { useUser } from '@/store/useUser'
 import * as ImagePicker from 'expo-image-picker'
@@ -21,8 +21,8 @@ const NewPost = () => {
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
   const [content, setContent] = useState('');
-  const [postImages, setPostImages] = useState<string[]>([]);
-  const [postVideos, setPostVideos] = useState<string[]>([]);
+  const [postImages, setPostImages] = useState<mediaData[]>([]);
+  const [postVideos, setPostVideos] = useState<mediaData[]>([]);
   const editPost = JSON.parse(useLocalSearchParams().post as string)
   
 
@@ -88,11 +88,12 @@ const NewPost = () => {
       Alert.alert('Post',"please choose an image/video or add post body")
       return
     }
-    if(editPost){
-      await onEditPost(post)
-    }else{
-      await createOrUpdatePost(post)
-    }
+    // if(editPost){
+    //   await onEditPost(post)
+    // }else{
+    //   await createOrUpdatePost(post)
+    // }
+    await createOrUpdatePost(post)
     setLoading(true)
     //清空显示区域
     setContent('')
@@ -135,7 +136,7 @@ const NewPost = () => {
                 );
                 return
               }
-              setPostImages([...postImages, result.assets[0].uri]);
+              setPostImages([...postImages, {id:Date.now(),url:result.assets[0].uri}]);
             }else{
               if(postVideos.length >= 3){
                 Alert.alert(
@@ -145,7 +146,7 @@ const NewPost = () => {
                 );
                 return
               }
-              setPostVideos([...postVideos, result.assets[0].uri]);
+              setPostVideos([...postVideos, {id:Date.now(),url:result.assets[0].uri}]);
             }
           }
         }
@@ -171,7 +172,7 @@ const NewPost = () => {
                 );
                 return;
               }
-              setPostImages([...postImages, result.assets[0].uri]);
+              setPostImages([...postImages, {id:Date.now(),url:result.assets[0].uri}]);
             } else {
               if(postVideos.length >= 3){
                 Alert.alert(
@@ -181,7 +182,7 @@ const NewPost = () => {
                 );
                 return;
               }
-              setPostVideos([...postVideos, result.assets[0].uri]);
+              setPostVideos([...postVideos, {id:Date.now(),url:result.assets[0].uri}]);
             }
           }
         }
@@ -358,8 +359,8 @@ const NewPost = () => {
     </html>
   `;
 
-  const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
-    const isVideo = item.includes('.mp4') || item.includes('.mov')||item.includes('VID');
+  const renderMediaItem = ({ item }: { item: mediaData }) => {
+    const isVideo = item.url.includes('.mp4') || item.url.includes('.mov') || item.url.includes('VID');
 
     return (
       <View style={styles.mediaPreviewContainer}>
@@ -367,9 +368,9 @@ const NewPost = () => {
           style={styles.deleteButton}
           onPress={() => {
             if (isVideo) {
-              setPostVideos(postVideos.filter((_, i) => postVideos[i] !== item));
+              setPostVideos(postVideos.filter(v => v.id !== item.id));
             } else {
-              setPostImages(postImages.filter((_, i) => postImages[i] !== item));
+              setPostImages(postImages.filter(i => i.id !== item.id));
             }
           }}
         >
@@ -378,7 +379,7 @@ const NewPost = () => {
         
         {isVideo ? (
           <Video
-            source={{ uri: item }}
+            source={{ uri: item.url }}
             style={styles.mediaPreview}
             resizeMode={ResizeMode.COVER}
             isLooping
@@ -387,7 +388,7 @@ const NewPost = () => {
           />
         ) : (
           <Image
-            source={{ uri: item }}
+            source={{ uri: item.url }}
             style={styles.mediaPreview}
             resizeMode="cover"
           />
@@ -422,7 +423,7 @@ const NewPost = () => {
             data={[...postImages, ...postVideos]}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item, index) => item.id.toString()}
             renderItem={renderMediaItem}
             style={styles.mediaList}
             contentContainerStyle={styles.mediaListContent}

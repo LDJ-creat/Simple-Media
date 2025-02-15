@@ -52,10 +52,10 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
         
         // 收集所有媒体URL
         if (item?.post?.image) {
-            mediaUrls = [...item.post.image]
+            mediaUrls = [...item.post.image.map(i=>i.url)]
         }
         if (item?.post?.video&&item?.post?.image?.length==0) {
-            mediaUrls = [...mediaUrls, ...item.post.video]
+            mediaUrls = [...mediaUrls, ...item.post.video.map(v=>v.url)]
         }
 
         // 准备分享内容
@@ -197,7 +197,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
 
         {item?.post?.image && (
           <FlatList
-          data={[...item?.post?.image, ...item?.post?.video]}
+          data={[...item?.post?.image.map(i=>i.url), ...item?.post?.video.map(v=>v.url)]}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item, index) => index.toString()}

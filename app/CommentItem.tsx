@@ -11,9 +11,10 @@ interface CommentItemProps {
     item: commentsData;
     canDelete: boolean;
     onDelete:()=>{}
+    highLight:boolean
 }
 
-const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete}) => {
+const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete,highLight}) => {
   const createAt=moment(item?.create_at).format('YYYY-MM-DD HH:mm:ss')
 
 
@@ -34,7 +35,7 @@ const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete}) => 
 }
 
   return (
-    <View  style={styles.container}>
+    <View  style={[styles.container,highLight&&styles.highLight]}>
       <Avatar
         uri={item?.userAvatar||""}
       />

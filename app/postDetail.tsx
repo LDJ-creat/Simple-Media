@@ -10,11 +10,11 @@ import { hp,wp } from '@/helper/common'
 import Icon from '@/assets/icons'
 import { useUser } from '@/store/useUser'
 import CommentItem from './CommentItem'
-
+import { createNotification } from '@/services/notification'
 
 const postDetail = () => {
     const user=useUser(state=>state.user)
-    const {postID} = useLocalSearchParams()
+    const {postID,userID} = useLocalSearchParams()
     const router = useRouter()
     const [post,setPost] = useState<getPost>()
     const [loading,setLoading] = useState(true)
@@ -82,10 +82,14 @@ const postDetail = () => {
             create_at:new Date().toISOString(),
         }
         await postComment(data)
+        if(user?.userID!==post?.userID){
+            await createNotification()
+        }
         setPostCommentLoading(false)
         setComments([...comments,newComment])
         inputRef.current?.clear()
         commentRef.current = ''
+
 
     }
 
@@ -162,6 +166,7 @@ const postDetail = () => {
                         item={comment}
                         canDelete={post?.userID===user?.userID||comment?.userID===user?.userID}
                         onDelete={()=>onDeleteComment(comment)}
+                        highLight={userID===comment?.userID}
                         />
                 ))
 

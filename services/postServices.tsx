@@ -1,7 +1,14 @@
+import api from "@/services/api"
+
+
+export interface mediaData{
+    id:number,
+    url:string,
+}
 export interface Post{
     body:string,
-    image:string[],
-    video:string[],
+    image:mediaData[],
+    video:mediaData[],
     postID?: string,
 }
 export interface commentsData{
@@ -22,10 +29,29 @@ export interface getPost{
     comments:commentsData[],
 }
 export const createOrUpdatePost =async (post:Post)=>{
+    const form=new FormData()
+    post.image.forEach((item,index)=>{
+        form.append("images",{
+            uri:item.url,
+            name:"image"+index+".jpg",
+            type:"image/jpeg",
+            id:item.id,
+        } as any)
+    })
+    post.video.forEach((item,index)=>{
+        form.append("videos",{
+            uri:item.url,
+            name:"video"+index+".mp4",
+            type:"video/mp4",
+            id:item.id,
+        } as any)
+    })
+    form.append("content",post.body)
     try{
-
+        await api.post("/post",form)
+        
     }catch(error){
-
+        console.log(error)
     }
 }
 
@@ -99,15 +125,34 @@ export const deleteComment=async (data:deleteCommentData)=>{
 
 export const deletePost=async (postID:string)=>{
     try{
-
+        await api.delete(`/post/${postID}`)
     }catch(error){
         console.log(error)
     }
 }
 
 export const onEditPost=async (post:Post)=>{
+    const form=new FormData()
+    post.image.forEach((item,index)=>{
+        form.append("images",{
+            uri:item.url,
+            name:"image"+index+".jpg",
+            type:"image/jpeg",
+            id:item.id,
+        } as any)
+    })
+    post.video.forEach((item,index)=>{
+        form.append("videos",{
+            uri:item.url,
+            name:"video"+index+".mp4",
+            type:"video/mp4",
+            id:item.id,
+        } as any)
+    })
+    form.append("content",post.body)
     try{
-
+        await api.post("/post",form)
+        
     }catch(error){
         console.log(error)
     }

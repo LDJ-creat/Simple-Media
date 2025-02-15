@@ -16,6 +16,9 @@ const home = () => {
     const user = useUser(state => state.user);
     const [posts,setPosts] = useState<getPost[]>([])
     const [hasMore,setHasMore] = useState<boolean>(true)
+    const [notificationsCount,setNotificationsCount] = useState<number>(0)
+    //订阅数据库频道来获取数据
+
 
     useEffect(()=>{
         const fetchPosts = async () => {
@@ -35,8 +38,20 @@ const home = () => {
           <Text style={styles.title}>LinkUp</Text>
 
           <View style={styles.icons}>
-            <Pressable onPress={()=>router.push('./notification')}>
-                <Icon name="heart" size={hp(3.2)} strokeWidth={2} color="red"/>
+            <Pressable onPress={()=>{
+                router.push('./notification')
+                setNotificationsCount(0)
+            }}>
+                <Icon name="heart" size={hp(3.2)} strokeWidth={2} color="black"/>
+
+
+                {
+                    notificationsCount>0&&(
+                        <View style={styles.pill}>
+                            <Text style={styles.pillText}>{notificationsCount}</Text>
+                        </View>
+                    )
+                }
             </Pressable>
             <Pressable onPress={()=>router.push('./newPost')}>
                 <Icon name="plus" size={hp(3.2)} strokeWidth={2} color="black"/>
