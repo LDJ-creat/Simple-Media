@@ -10,8 +10,7 @@ import { hp,wp } from '@/helper/common'
 import Icon from '@/assets/icons'
 import { useUser } from '@/store/useUser'
 import CommentItem from './CommentItem'
-import { createNotification } from '@/services/notification'
-
+import useMyPosts from '@/store/useMyPosts'
 const postDetail = () => {
     const user=useUser(state=>state.user)
     const {postID,userID} = useLocalSearchParams()
@@ -22,12 +21,14 @@ const postDetail = () => {
     const inputRef = useRef<TextInput>(null)
     const commentRef = useRef('')
     const [comments,setComments]=useState(post?.comments || [])
+    const deleteMyPost = useMyPosts(state => state.deleteMyPosts)
     
     
     const onDeletePost=async (postID:string)=>{
         await deletePost(postID as string)
-        //home页面中通过订阅数据库变化，会自动更新
-        router.back()
+        //home页面中通过订阅数据库变化，会自动更新,但这里采用传参刷新的方式
+        deleteMyPost(postID as string)
+        router.navigate({pathname:'/home',params:{refresh:'true'}})
     }
 
     const onEditPost=async (post:getPost)=>{
@@ -69,9 +70,7 @@ const postDetail = () => {
             create_at:new Date().toISOString(),
         }
         await postComment(data)
-        if(user?.userID!==post?.userID){
-            await createNotification()
-        }
+
         setPostCommentLoading(false)
         setComments([...comments,newComment])
         inputRef.current?.clear()

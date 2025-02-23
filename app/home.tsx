@@ -12,6 +12,9 @@ import Loading from '@/components/Loading'
 import { useUser } from '@/store/useUser'
 import api from '@/services/api'
 import useMyPosts from '@/store/useMyPosts'
+import {getUnreadCount } from '@/services/notification'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
 const home = () => {
     const router = useRouter()
     const user = useUser(state => state.user);
@@ -74,6 +77,48 @@ const home = () => {
             }
         }
     },[refresh,postID])
+
+
+    useEffect(() => {
+        const loadNotifications = async () => {
+        const count = await getUnreadCount();
+        setNotificationsCount(count);
+        };
+        loadNotifications();
+    }, []);
+
+    useEffect(() => {
+        // 从存储中获取用户 Token（示例使用 AsyncStorage）
+        const connectWebSocket = async () => {
+          const token = await AsyncStorage.getItem('authToken');
+          const ws = new WebSocket(`ws://10.0.2.2:8080/ws?token=${token}`);
+      
+          ws.onopen = () => {
+            console.log('WebSocket connected');
+          };
+      
+          ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === 'notification') {
+              setNotificationsCount(prev => prev + data.count);
+            }
+          };
+      
+          ws.onerror = (e) => {
+            console.error('WebSocket error:', e);
+          };
+      
+          ws.onclose = () => {
+            console.log('WebSocket disconnected');
+          };
+      
+          return () => {
+            ws.close(); // 组件卸载时关闭连接
+          };
+        };
+      
+        connectWebSocket();
+      }, []);
 
 
   return (
