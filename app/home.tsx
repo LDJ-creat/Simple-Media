@@ -11,6 +11,7 @@ import PostCard from './PostCard'
 import Loading from '@/components/Loading'
 import { useUser } from '@/store/useUser'
 import api from '@/services/api'
+import useMyPosts from '@/store/useMyPosts'
 const home = () => {
     const router = useRouter()
     const user = useUser(state => state.user);
@@ -20,6 +21,8 @@ const home = () => {
     const [notificationsCount,setNotificationsCount] = useState<number>(0)
     const [cursor,setCursor]=useState<string|null>(null)
     const {refresh,postID} = useLocalSearchParams()
+    const [newPost,setNewPost]=useState<getPost|null>(null)
+    const myPosts = useMyPosts(state => state.myPosts)
 
 
     const fetchPosts=async(currentCursor:string|null)=>{
@@ -64,7 +67,13 @@ const home = () => {
         if(refresh){
             handleRefresh()
         }
-    },[refresh])
+        if(postID){
+            const post=myPosts.find(post=>post.postID===postID)
+            if(post){
+                setNewPost(post)
+            }
+        }
+    },[refresh,postID])
 
 
   return (
@@ -103,7 +112,7 @@ const home = () => {
         </View>
 
         <FlatList
-            data={posts}
+            data={newPost?[newPost,...posts]:posts}
             refreshControl={
                 <RefreshControl
                     refreshing={isRefreshing}

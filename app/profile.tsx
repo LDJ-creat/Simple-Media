@@ -13,7 +13,8 @@ import { useUser } from '@/store/useUser'
 import { deletePost, getMyPosts, getPost } from '@/services/postServices'
 import Loading from '@/components/Loading'
 import PostCard from './PostCard'
-
+import api from '@/services/api'
+import useMyPosts from '@/store/useMyPosts'
 const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router, handleLogout: () => void }) => {
   
   return (
@@ -67,24 +68,51 @@ const profile = () => {
   const setUser = useUser(state => state.setUser);
   const userData = getUserData();
   const user = useUser(state => state.user);
-  const [posts,setPosts] = useState<getPost[]>([])
+  const [cursor,setCursor]=useState<string|null>(null)
+  // const [posts,setPosts] = useState<getPost[]>([])
   const [hasMore,setHasMore] = useState<boolean>(true)
+  const posts = useMyPosts(state => state.myPosts)
+  const setMyPosts = useMyPosts(state => state.setMyPosts)//全局管理myPosts
+  const clearMyPosts = useMyPosts(state => state.clearMyPosts)
 
+
+  const fetchMyPosts=async(currentCursor:string|null)=>{
+    try{
+        const params=new URLSearchParams();
+        if(currentCursor){
+            params.append("last_id",currentCursor);
+        }
+        const response=await api.get(`/getMyPosts?${params}`)
+        const newPosts: getPost[]=response.data
+        const nextCursor=response.headers['x-next-cursor'] || null
+        setHasMore(newPosts.length>0)
+        setCursor(nextCursor)
+        setMyPosts([...posts, ...newPosts])
+    }catch(error){
+        console.error("Fail to fetch my posts:",error)
+    }
+ }
+ 
   useEffect(()=>{
-      const fetchPosts = async () => {
-          const response = await getMyPosts(user?.userID as string)
-          setPosts(response)
+      if(posts.length===0 && hasMore){
+          fetchMyPosts(null)
       }
-      fetchPosts()
   },[])
-  const getMoreData=()=>{
 
-  }
+
   useEffect(() => {
     setUser(userData);
   }, []);
 
+  const handleLoadMore=()=>{
+    if(hasMore&&cursor){
+        fetchMyPosts(cursor)
+    }
+}
+
   const Logout = () => {
+    setUser(null)
+    clearMyPosts()
     router.push('/Login')
   }
   const handleLogout = async () => {
@@ -126,7 +154,7 @@ const profile = () => {
                 onDeletePost={()=>handleDeletePost(item.postID as string)}
                 />
             )}
-            onEndReached={getMoreData}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.1}
             ListFooterComponent={hasMore?(
                 <View style={{marginVertical: posts.length==0?100:30}}>

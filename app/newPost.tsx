@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image } 
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Header from '@/components/Header'
 import Button from '@/components/Button'
-import {Post,createPost,updatePost,mediaData} from '@/services/postServices'
+import {Post,createPost,updatePost,mediaData,getPost} from '@/services/postServices'
 import {useRouter,useLocalSearchParams} from  'expo-router'
 import { useUser } from '@/store/useUser'
 import * as ImagePicker from 'expo-image-picker'
@@ -13,7 +13,7 @@ import {theme} from '@/constants/theme'
 import Avatar from '@/components/Avatar';
 import { FlatList } from 'react-native-gesture-handler';
 import { Video, ResizeMode } from 'expo-av';
-
+import useMyPosts from '@/store/useMyPosts'
 
 const NewPost = () => {
   const [loading,setLoading]=useState(false)
@@ -23,6 +23,8 @@ const NewPost = () => {
   const [content, setContent] = useState('');
   const [media, setMedia] = useState<mediaData[]>([]);
   const editPost = JSON.parse(useLocalSearchParams().post as string)
+  const addMyPosts = useMyPosts(state => state.addMyPosts)
+  const updateMyPosts = useMyPosts(state => state.updateMyPosts)
   
 
   useEffect(()=>{
@@ -86,11 +88,26 @@ const NewPost = () => {
       Alert.alert('Post',"please add post content or choose an image/video")
       return
     }
+    const myPost:getPost={
+      postID:post.postID as string,
+      userID:user?.userID as string,
+      userName:user?.userName as string,
+      avatar:user?.avatar as string,
+      create_at:new Date().toISOString(),
+      postLikes:[],
+      comments:[],
+      post:post
+    }
+
     if(editPost){
       await updatePost(post)
+      updateMyPosts(myPost)
     }else{
       const response=await createPost(post)
       post.postID=response.postID
+      myPost.postID=response.postID
+      myPost.post.postID=response.postID
+      addMyPosts(myPost)
     }
 
     setLoading(true)
@@ -102,6 +119,7 @@ const NewPost = () => {
       refresh:'true',
       postID:post.postID
     }})
+
   }
 
 

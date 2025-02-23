@@ -4,7 +4,7 @@ import { userData } from '@/services/getUserData'
 
 interface UserState {
   user: userData | null;
-  setUser: (user: userData) => void;
+  setUser: (user: userData|null) => void;
   updateUser: (userData: Partial<userData>) => void;
 }
 
