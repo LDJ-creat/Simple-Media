@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image } 
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Header from '@/components/Header'
 import Button from '@/components/Button'
-import {Post,createOrUpdatePost, onEditPost,mediaData} from '@/services/postServices'
+import {Post,createPost,updatePost,mediaData} from '@/services/postServices'
 import {useRouter,useLocalSearchParams} from  'expo-router'
 import { useUser } from '@/store/useUser'
 import * as ImagePicker from 'expo-image-picker'
@@ -21,19 +21,18 @@ const NewPost = () => {
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
   const [content, setContent] = useState('');
-  const [postImages, setPostImages] = useState<mediaData[]>([]);
-  const [postVideos, setPostVideos] = useState<mediaData[]>([]);
+  const [media, setMedia] = useState<mediaData[]>([]);
   const editPost = JSON.parse(useLocalSearchParams().post as string)
   
 
   useEffect(()=>{
     if(editPost){
-      setContent(editPost.post.body)
-      setPostImages(editPost.post.image)
-      setPostVideos(editPost.post.video)
+      setContent(editPost.content)
+      setMedia(editPost.media)
+
       // 注入原内容到WebView
       webViewRef.current?.injectJavaScript(`
-        setContent(\`${editPost.post.body}\`);
+        setContent(\`${editPost.content}\`);
         true;
       `);
     }
@@ -76,31 +75,33 @@ const NewPost = () => {
   };
 
   const post: Post = {
-    body: content,
-    image: postImages,
-    video: postVideos,
-    postID: editPost?.post.postID // 添加postID用于更新
+    content: content,
+    media:media,
+    postID: editPost?.postID // 添加postID用于更新
   }
 
 
   const onSubmit=async ()=>{
-    if(!content&&postImages.length==0&&postVideos.length==0){
-      Alert.alert('Post',"please choose an image/video or add post body")
+    if(!content&&media.length==0){
+      Alert.alert('Post',"please add post content or choose an image/video")
       return
     }
-    // if(editPost){
-    //   await onEditPost(post)
-    // }else{
-    //   await createOrUpdatePost(post)
-    // }
-    await createOrUpdatePost(post)
+    if(editPost){
+      await updatePost(post)
+    }else{
+      const response=await createPost(post)
+      post.postID=response.postID
+    }
+
     setLoading(true)
     //清空显示区域
     setContent('')
-    setPostImages([])
-    setPostVideos([])
+    setMedia([])
     setLoading(false)
-
+    router.navigate({pathname:'/home',params:{
+      refresh:'true',
+      postID:post.postID
+    }})
   }
 
 
@@ -127,27 +128,22 @@ const NewPost = () => {
             videoMaxDuration: 60,
           });
           if (!result.canceled) {
-            if(isImage){
-              if(postImages.length >= 10){
+              if(media.length >= 10){
                 Alert.alert(
                   "上传失败",
-                  "最多上传10张图片",
+                  "最多上传10张图片或视频",
                   [{ text: "确定", style: "default" }]
                 );
                 return
               }
-              setPostImages([...postImages, {id:Date.now(),url:result.assets[0].uri}]);
-            }else{
-              if(postVideos.length >= 3){
-                Alert.alert(
-                  "上传失败",
-                  "最多上传3个视频",
-                  [{ text: "确定", style: "default" }]
-                );
-                return
-              }
-              setPostVideos([...postVideos, {id:Date.now(),url:result.assets[0].uri}]);
-            }
+              const newMedia = result.assets.map(asset => ({
+                id: '',
+                uri: asset.uri,
+                name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
+                type: isImage ? 'image' : 'video'
+              }));
+              setMedia([...media, ...newMedia]);
+
           }
         }
       },
@@ -163,27 +159,21 @@ const NewPost = () => {
             videoMaxDuration: 60,
           });
           if (!result.canceled) {
-            if(isImage){
-              if(postImages.length >= 10){
-                Alert.alert(
-                  "上传失败",
-                  "最多上传10张图片",
-                  [{ text: "确定", style: "default" }]
-                );
-                return;
-              }
-              setPostImages([...postImages, {id:Date.now(),url:result.assets[0].uri}]);
-            } else {
-              if(postVideos.length >= 3){
-                Alert.alert(
-                  "上传失败",
-                  "最多上传3个视频",
-                  [{ text: "确定", style: "default" }]
-                );
-                return;
-              }
-              setPostVideos([...postVideos, {id:Date.now(),url:result.assets[0].uri}]);
+            if(media.length >= 10){
+              Alert.alert(
+                "上传失败",
+                "最多上传10张图片或视频",
+                [{ text: "确定", style: "default" }]
+              );
+              return;
             }
+            const newMedia = result.assets.map(asset => ({
+              id: '',
+              uri: asset.uri,
+              name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
+              type: isImage ? 'image' : 'video'
+            }));
+            setMedia([...media, ...newMedia]);
           }
         }
       }
@@ -360,18 +350,14 @@ const NewPost = () => {
   `;
 
   const renderMediaItem = ({ item }: { item: mediaData }) => {
-    const isVideo = item.url.includes('.mp4') || item.url.includes('.mov') || item.url.includes('VID');
+    const isVideo = item.uri.includes('.mp4') || item.uri.includes('.mov') || item.uri.includes('VID');
 
     return (
       <View style={styles.mediaPreviewContainer}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => {
-            if (isVideo) {
-              setPostVideos(postVideos.filter(v => v.id !== item.id));
-            } else {
-              setPostImages(postImages.filter(i => i.id !== item.id));
-            }
+             setMedia(media.filter(m=>m.id!==item.id))
           }}
         >
           <Icon name="delete" size={16} />
@@ -379,16 +365,16 @@ const NewPost = () => {
         
         {isVideo ? (
           <Video
-            source={{ uri: item.url }}
+            source={{ uri: item.uri }}
             style={styles.mediaPreview}
-            resizeMode={ResizeMode.COVER}
+            resizeMode={ResizeMode.COVER} 
             isLooping
             isMuted={true}
             shouldPlay={false}
           />
         ) : (
           <Image
-            source={{ uri: item.url }}
+            source={{ uri: item.uri }}
             style={styles.mediaPreview}
             resizeMode="cover"
           />
@@ -418,9 +404,9 @@ const NewPost = () => {
           onMessage={onMessage}
         />
 
-        {(postImages.length > 0 || postVideos.length > 0) && (
+        {media.length > 0 && (
           <FlatList
-            data={[...postImages, ...postVideos]}
+            data={media}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item, index) => item.id.toString()}

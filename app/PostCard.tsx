@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Share,Alert } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert } from 'react-native'
 import React, { useState } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
@@ -10,6 +10,7 @@ import RenderHtml from "react-native-render-html"
 import { Video,ResizeMode } from 'expo-av'
 import { useUser } from '@/store/useUser'
 import { stripHtmlTags } from '@/helper/common'
+import Share from 'react-native-share';
 
 interface PostCardProps {
     item?: getPost;
@@ -32,43 +33,30 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     const onLike =async () => {
         if (!user?.userID || !item?.postID) return;
         
-        let data = {
-            postID: item.postID,
-            userID: user.userID,
-        }
         if(liked){
             let updateLikes=likes?.filter(like=>like!=user.userID)
             setLikes([...updateLikes])
-            removePostLike(data)
+            removePostLike(item.postID)
         }else{
             setLikes([...likes, user.userID])
-            createPostLike(data)
+            createPostLike(item.postID)
         }
     }
 
     const share=async()=>{
-        let content = stripHtmlTags(item?.post?.body || '')
-        let mediaUrls: string[] = []
+        let content = stripHtmlTags(item?.post?.content || '')
+        let mediaUrls: string[] = [...(item?.post?.media?.map(i => i.uri) || [])]
         
-        // 收集所有媒体URL
-        if (item?.post?.image) {
-            mediaUrls = [...item.post.image.map(i=>i.url)]
-        }
-        if (item?.post?.video&&item?.post?.image?.length==0) {
-            mediaUrls = [...mediaUrls, ...item.post.video.map(v=>v.url)]
-        }
-
-        // 准备分享内容
-        const shareContent = {
+        //react-native原生的share仅支持分享单张图片或单个视频，所以这里使用react-native-share
+        try{
+          const shareOptions = {
             message: content,
-            // 如果有媒体文件，添加第一个媒体文件作为分享URL
-            ...(mediaUrls.length > 0 && { url: mediaUrls[0] })
-        }
+            urls: mediaUrls,
+          }
 
-        try {
-            await Share.share(shareContent)
+          await Share.open(shareOptions);
         } catch (error) {
-            console.error('分享失败:', error)
+          console.error('分享失败:', error);
         }
         //方案二：
         // 先下载图片和视频再利用本地url分享
@@ -89,7 +77,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     }
 
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
-        const isVideo = item.includes('.mp4') || item.includes('.mov')||item.includes('VID');
+        const isVideo =item.includes('.mp4')||item.includes('.mov')||item.includes('VID');
     
         return (
           <View style={styles.mediaPreviewContainer}>   
@@ -185,19 +173,19 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
 
         <View style={styles.content}>
           <View style={styles.postBody}>
-            {item?.post?.body && (
+            {item?.post?.content && (
               <RenderHtml
                 contentWidth={wp(100)}
-                source={{html:item?.post?.body}}
+                source={{html:item?.post?.content}}
                 tagsStyles={tagStyles}
               />
             )}
           </View>
         </View>
 
-        {item?.post?.image && (
+        {item?.post?.media && (
           <FlatList
-          data={[...item?.post?.image.map(i=>i.url), ...item?.post?.video.map(v=>v.url)]}
+          data={[...item?.post?.media.map(i=>i.uri)]}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item, index) => index.toString()}

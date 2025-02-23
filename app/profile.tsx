@@ -10,8 +10,7 @@ import { useRouter, Router } from 'expo-router'
 import Avatar from '@/components/Avatar'
 import { userData,getUserData } from '@/services/getUserData'
 import { useUser } from '@/store/useUser'
-import { getMyPosts, getPost } from '@/services/postServices'
-import { getPosts } from '@/services/postServices'
+import { deletePost, getMyPosts, getPost } from '@/services/postServices'
 import Loading from '@/components/Loading'
 import PostCard from './PostCard'
 
@@ -106,6 +105,11 @@ const profile = () => {
       ]
     );
   }
+
+
+  const handleDeletePost=async(postID:string)=>{
+    await deletePost(postID)
+  }
   return (
     <ScreenWrapper bg="white">
       <FlatList
@@ -119,6 +123,7 @@ const profile = () => {
                 <PostCard
                 item={item}
                 router={router}
+                onDeletePost={()=>handleDeletePost(item.postID as string)}
                 />
             )}
             onEndReached={getMoreData}

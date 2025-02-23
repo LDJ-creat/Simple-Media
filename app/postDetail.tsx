@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View,ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams } from 'expo-router'
 import { getPost, getPostDetails,postComment,commentsData,deleteComment,deletePost} from '@/services/postServices'
 import PostCard from './PostCard'
 import Loading from '@/components/Loading'
@@ -23,19 +23,7 @@ const postDetail = () => {
     const commentRef = useRef('')
     const [comments,setComments]=useState(post?.comments || [])
     
-
-    const onDeleteComment=async (comment:commentsData)=>{
-        const newComments=comments.filter((c)=>c.userID!==comment.userID)
-        setComments(newComments)
-        let data={
-            postID:postID as string,
-            userID:comment.userID,
-        }
-        await deleteComment(data)
-
-    }
     
-
     const onDeletePost=async (postID:string)=>{
         await deletePost(postID as string)
         //home页面中通过订阅数据库变化，会自动更新
@@ -72,7 +60,6 @@ const postDetail = () => {
         let data={
             postID:postID as string,
             comment:commentRef.current,
-            userID:user?.userID,
         }
         let newComment={
             userID:user?.userID,
@@ -90,6 +77,13 @@ const postDetail = () => {
         inputRef.current?.clear()
         commentRef.current = ''
 
+
+    }
+
+    const onDeleteComment=async (comment:commentsData)=>{
+        const newComments=comments.filter((c)=>c.userID!==comment.userID)
+        setComments(newComments)
+        await deleteComment(postID as string)
 
     }
 

@@ -1,35 +1,71 @@
-import { StyleSheet, Text, View,Alert,Button,Pressable,FlatList } from 'react-native'
+import { StyleSheet, Text, View,Alert,Button,Pressable,FlatList, RefreshControl } from 'react-native'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
 import Icon from  '@/assets/icons'
 import React, { useState, useEffect } from 'react'
-import {useRouter} from 'expo-router'
+import {useRouter,useLocalSearchParams} from 'expo-router'
 import Avatar from '@/components/Avatar'
-import { getPost, Post,getPosts } from '@/services/postServices'
+import {getPost } from '@/services/postServices'
 import PostCard from './PostCard'
 import Loading from '@/components/Loading'
 import { useUser } from '@/store/useUser'
-
+import api from '@/services/api'
 const home = () => {
     const router = useRouter()
     const user = useUser(state => state.user);
     const [posts,setPosts] = useState<getPost[]>([])
+    const [isRefreshing,setIsRefreshing] = useState<boolean>(false)
     const [hasMore,setHasMore] = useState<boolean>(true)
     const [notificationsCount,setNotificationsCount] = useState<number>(0)
-    //订阅数据库频道来获取数据
+    const [cursor,setCursor]=useState<string|null>(null)
+    const {refresh,postID} = useLocalSearchParams()
 
+
+    const fetchPosts=async(currentCursor:string|null)=>{
+        try{
+            const params=new URLSearchParams();
+            if(currentCursor){
+                params.append("last_id",currentCursor);
+            }
+            const response=await api.get(`/getPosts?${params}`)
+            const newPosts: getPost[]=response.data
+            const nextCursor=response.headers['x-next-cursor'] || null
+            setHasMore(newPosts.length>0)
+            setCursor(nextCursor)
+            setPosts(prev=>[...prev,...newPosts])
+        }catch(error){
+            console.error("Fail to fetch posts:",error)
+        }
+    }
 
     useEffect(()=>{
-        const fetchPosts = async () => {
-            const response = await getPosts()
-            setPosts(response)
+        if(posts.length===0 && hasMore){
+            fetchPosts(null)
         }
-        fetchPosts()
     },[])
-    const getMoreData=()=>{
 
+    const handleLoadMore=()=>{
+        if(hasMore&&cursor){
+            fetchPosts(cursor)
+        }
     }
+
+    const handleRefresh=()=>{
+        setIsRefreshing(true)
+        setCursor(null)
+        setPosts([])
+        setHasMore(true)
+        fetchPosts(null)
+        setIsRefreshing(false)
+    }
+
+    useEffect(()=>{
+        if(refresh){
+            handleRefresh()
+        }
+    },[refresh])
+
 
   return (
     <ScreenWrapper bg="white">
@@ -68,6 +104,12 @@ const home = () => {
 
         <FlatList
             data={posts}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                />
+            }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
             keyExtractor={(item, index) => index.toString()}
@@ -77,7 +119,7 @@ const home = () => {
                 router={router}
                 />
             )}
-            onEndReached={getMoreData}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.1}
             ListFooterComponent={hasMore?(
                 <View style={{marginVertical: posts.length==0?200:30}}>
