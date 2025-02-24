@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // 创建axios实例
 const api = axios.create({
 //   baseURL: 'https://your-api-base-url.com', // 设置基础URL
@@ -14,9 +14,9 @@ const api = axios.create({
 
 // 请求拦截器
 api.interceptors.request.use(
-  config => {
+  async config => {
     // 可以在这里统一添加token
-    const token = ''; // 从存储中获取token
+    const token =await AsyncStorage.getItem('authToken'); // 从存储中获取token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

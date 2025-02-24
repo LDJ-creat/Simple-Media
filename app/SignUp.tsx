@@ -10,18 +10,32 @@ import Icon from '@/assets/icons'
 import Input from '@/components/Input'
 import { useState} from 'react'
 import Button from '@/components/Button'
+import { HandleSignUp } from '@/services/getUserData'
+import { useUser } from '@/store/useUser'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const Login = () => {
     const router = useRouter();
+    const setUser=useUser(state=>state.setUser)
     const[loading, setLoading] = useState(false);
     const[name, setName] = useState('');
     const[email, setEmail] = useState('');
     const[password, setPassword] = useState('');
-    const submit=()=>{
+    const submit=async ()=>{
         if(!name.trim() || !email.trim() || !password.trim()){
             Alert.alert('Please fill all fields')
             return;
         }
+        setLoading(true)
+        const signUpData={
+            userName:name,
+            email:email,
+            password:password
+        }
+        const response=await HandleSignUp(signUpData)
+        setUser(response.userData)
+        AsyncStorage.setItem('token',response.token)
+        setLoading(false)
         setName('')
         setEmail('')
         setPassword('')

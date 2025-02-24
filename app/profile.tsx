@@ -8,14 +8,14 @@ import { TouchableOpacity } from 'react-native-gesture-handler'
 import Icon from '@/assets/icons'
 import { useRouter, Router } from 'expo-router'
 import Avatar from '@/components/Avatar'
-import { userData,getUserData } from '@/services/getUserData'
+import { userData } from '@/services/getUserData'
 import { useUser } from '@/store/useUser'
 import { deletePost, getMyPosts, getPost } from '@/services/postServices'
 import Loading from '@/components/Loading'
 import PostCard from './PostCard'
 import api from '@/services/api'
 import useMyPosts from '@/store/useMyPosts'
-const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router, handleLogout: () => void }) => {
+const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Router, handleLogout: () => void }) => {
   
   return (
       <View style={{flex:1,backgroundColor:'white',paddingHorizontal:wp(4)}}>
@@ -66,7 +66,6 @@ const UserHeader = ({user,router, handleLogout}: { user:userData,router: Router,
 const profile = () => {
   const router = useRouter();
   const setUser = useUser(state => state.setUser);
-  const userData = getUserData();
   const user = useUser(state => state.user);
   const [cursor,setCursor]=useState<string|null>(null)
   // const [posts,setPosts] = useState<getPost[]>([])
@@ -100,9 +99,6 @@ const profile = () => {
   },[])
 
 
-  useEffect(() => {
-    setUser(userData);
-  }, []);
 
   const handleLoadMore=()=>{
     if(hasMore&&cursor){
@@ -142,7 +138,7 @@ const profile = () => {
     <ScreenWrapper bg="white">
       <FlatList
             data={posts}
-            ListHeaderComponent={<UserHeader user={userData} handleLogout={handleLogout} router={router} />}
+            ListHeaderComponent={<UserHeader user={user} handleLogout={handleLogout} router={router} />}
             ListHeaderComponentStyle={{marginBottom:10}}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}

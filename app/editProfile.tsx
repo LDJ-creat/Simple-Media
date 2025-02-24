@@ -12,6 +12,7 @@ import Button from '@/components/Button'
 import { useUser } from '@/store/useUser'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
+import api from '@/services/api'
 
 const editProfile = () => {
   const router = useRouter();
@@ -98,7 +99,12 @@ const editProfile = () => {
         name: 'avatar.jpg'
       } as any);
 
-      
+      data.append('userName', formData.userName);
+      data.append('phone', formData.phone);
+      data.append('signature', formData.signature);
+
+      await api.put('/updateUser', data);
+
       // 更新本地状态
       updateUser(formData);
       Alert.alert("Success", "Profile updated successfully");
