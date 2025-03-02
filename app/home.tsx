@@ -15,7 +15,7 @@ import useMyPosts from '@/store/useMyPosts'
 import {getUnreadCount } from '@/services/notification'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const home = () => {
+const Home = () => {
     const router = useRouter()
     const user = useUser(state => state.user);
     const [posts,setPosts] = useState<getPost[]>([])
@@ -35,13 +35,13 @@ const home = () => {
                 params.append("last_id",currentCursor);
             }
             const response=await api.get(`/getPosts?${params}`)
-            const newPosts: getPost[]=response.data
+            const newPosts: getPost[]=response.data.posts || [];
             const nextCursor=response.headers['x-next-cursor'] || null
             setHasMore(newPosts.length>0)
             setCursor(nextCursor)
-            setPosts(prev=>[...prev,...newPosts])
+            setPosts(prev=>[...(prev || []), ...newPosts])
         }catch(error){
-            console.error("Fail to fetch posts:",error)
+            console.error("获取帖子失败:",error)
         }
     }
 
@@ -88,37 +88,51 @@ const home = () => {
     }, []);
 
     useEffect(() => {
-        // 从存储中获取用户 Token（示例使用 AsyncStorage）
         const connectWebSocket = async () => {
-          const token = await AsyncStorage.getItem('authToken');
-          const ws = new WebSocket(`ws://10.0.2.2:8080/ws?token=${token}`);
-      
-          ws.onopen = () => {
-            console.log('WebSocket connected');
-          };
-      
-          ws.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'notification') {
-              setNotificationsCount(prev => prev + data.count);
-            }
-          };
-      
-          ws.onerror = (e) => {
-            console.error('WebSocket error:', e);
-          };
-      
-          ws.onclose = () => {
-            console.log('WebSocket disconnected');
-          };
-      
-          return () => {
-            ws.close(); // 组件卸载时关闭连接
-          };
+            const token = await AsyncStorage.getItem('token');
+            if (!token || !user?.ID) return;
+
+            // 从 api 配置中获取基础 URL
+            const wsUrl = api.defaults.baseURL?.replace('http://', 'ws://');
+            if (!wsUrl) return;
+
+            const ws = new WebSocket(`${wsUrl}/ws?token=${token}`);
+        
+            ws.onopen = () => {
+                console.log('WebSocket 连接成功');
+            };
+        
+            ws.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'notification') {
+                        setNotificationsCount(prev => prev + data.count);
+                    }
+                } catch (error) {
+                    console.error('WebSocket 消息解析错误:', error);
+                }
+            };
+        
+            ws.onerror = (e) => {
+                console.error('WebSocket 错误:', e);
+            };
+        
+            ws.onclose = () => {
+                console.log('WebSocket 连接断开');
+                // 可以在这里添加重连逻辑
+                console.log("开始重连")
+                setTimeout(connectWebSocket, 3000);
+            };
+        
+            return () => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            };
         };
-      
+        
         connectWebSocket();
-      }, []);
+    }, []); // 使用 ID 作为依赖
 
 
   return (
@@ -148,7 +162,7 @@ const home = () => {
             </Pressable>
             <Pressable onPress={()=>router.push('./profile')}>
                 <Avatar 
-                uri={user?.avatar||""}//后续替换成向后端请求的数据，无设置则为空
+                uri={user?.Avatar||""}//后续替换成向后端请求的数据，无设置则为空
                 size={hp(4.5)}
                 rounded={theme.radius.sm}
                 style={{borderWidth:2}}/>
@@ -157,7 +171,7 @@ const home = () => {
         </View>
 
         <FlatList
-            data={newPost?[newPost,...posts]:posts}
+            data={newPost ? [newPost, ...(posts || [])] : (posts || [])}
             refreshControl={
                 <RefreshControl
                     refreshing={isRefreshing}
@@ -166,21 +180,21 @@ const home = () => {
             }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item, index) => item.postID || index.toString()}
             renderItem={({item}) => (
                 <PostCard
-                item={item}
-                router={router}
+                    item={item}
+                    router={router}
                 />
             )}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.1}
-            ListFooterComponent={hasMore?(
-                <View style={{marginVertical: posts.length==0?200:30}}>
+            ListFooterComponent={hasMore ? (
+                <View style={{marginVertical: posts.length === 0 ? 200 : 30}}>
                     <Loading/>
                 </View>
-            ):(
-                <View style={{marginVertical:30}}>
+            ) : (
+                <View style={{marginVertical: 30}}>
                     <Text style={styles.noPosts}>No more posts</Text>
                 </View>
             )}
@@ -190,7 +204,7 @@ const home = () => {
   )
 }
 
-export default home
+export default Home
 
 const styles = StyleSheet.create({
     container:{

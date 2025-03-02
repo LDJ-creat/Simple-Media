@@ -22,7 +22,8 @@ const NewPost = () => {
   const webViewRef = useRef<WebView>(null);
   const [content, setContent] = useState('');
   const [media, setMedia] = useState<mediaData[]>([]);
-  const editPost = JSON.parse(useLocalSearchParams().post as string)
+  const params = useLocalSearchParams();
+  const editPost = params.post ? JSON.parse(decodeURIComponent(params.post as string)) : null;
   const addMyPosts = useMyPosts(state => state.addMyPosts)
   const updateMyPosts = useMyPosts(state => state.updateMyPosts)
   
@@ -90,9 +91,9 @@ const NewPost = () => {
     }
     const myPost:getPost={
       postID:post.postID as string,
-      userID:user?.userID as string,
-      userName:user?.userName as string,
-      avatar:user?.avatar as string,
+      userID:user?.ID as unknown as string,
+      username:user?.Username as unknown as string,
+      avatar:user?.Avatar as unknown as string,
       create_at:new Date().toISOString(),
       postLikes:[],
       comments:[],
@@ -406,9 +407,9 @@ const NewPost = () => {
       <Header title="Create Post" showBackButton={true}/>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Avatar size={40} uri={user?.avatar || ''}/>
+          <Avatar size={40} uri={user?.Avatar || ''}/>
           <View>
-            <Text style={styles.username}>{user?.userName || 'Hello'}</Text>
+            <Text style={styles.username}>{user?.Username || 'Hello'}</Text>
             <Text style={styles.publicText}>Public</Text>
           </View>
         </View>
@@ -427,7 +428,7 @@ const NewPost = () => {
             data={media}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item, index) => item.id.toString()}
+            keyExtractor={(index) =>index.toString()}
             renderItem={renderMediaItem}
             style={styles.mediaList}
             contentContainerStyle={styles.mediaListContent}
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     position: 'absolute',
-    top: -5,
+    top: 1,
     right: -5,
     zIndex: 1,
     width: 24,

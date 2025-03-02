@@ -9,18 +9,18 @@ export default function Layout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: 'slide_from_right'
         }}
-      />
-
-      <Stack.Screen name="postDetail" options={{
-        headerShown: true,
-        headerTitle: '帖子详情',
-        headerBackTitle: '返回',
-        headerBackVisible: true,
-      }} />
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="postDetail" options={{
+          headerShown: true,
+          headerTitle: '帖子详情',
+          headerBackTitle: '返回',
+        }} />
+      </Stack>
     </GestureHandlerRootView>
   )
 }
-
 
 const styles = StyleSheet.create({})

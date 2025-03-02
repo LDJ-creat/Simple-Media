@@ -11,7 +11,8 @@ import Icon from '@/assets/icons'
 import { useUser } from '@/store/useUser'
 import CommentItem from './CommentItem'
 import useMyPosts from '@/store/useMyPosts'
-const postDetail = () => {
+
+const PostDetail = () => {
     const user=useUser(state=>state.user)
     const {postID,userID} = useLocalSearchParams()
     const router = useRouter()
@@ -57,16 +58,16 @@ const postDetail = () => {
             return
         }
         setPostCommentLoading(true)
-        if(!user?.userID) return
+        if(!user?.ID) return
         let data={
             postID:postID as string,
             comment:commentRef.current,
         }
         let newComment={
-            userID:user?.userID,
+            userID:String(user?.ID),
             comment:commentRef.current,
-            userName:user?.userName,
-            userAvatar:user?.avatar,
+            username:user?.Username,
+            avatar:user?.Avatar,
             create_at:new Date().toISOString(),
         }
         await postComment(data)
@@ -114,7 +115,7 @@ const postDetail = () => {
             commentsCount={comments.length} 
             router={router} hasShadow={false}  
             showMoreIcons={false}
-            showDelete={post?.userID===user?.userID}
+            showDelete={post?.userID===String(user?.ID)}
             onDeletePost={()=>onDeletePost(postID as string)}
             onEditPost={()=>onEditPost(post)}
         />
@@ -157,7 +158,7 @@ const postDetail = () => {
                 post?.comments.map((comment)=>(
                     <CommentItem
                         item={comment}
-                        canDelete={post?.userID===user?.userID||comment?.userID===user?.userID}
+                        canDelete={post?.userID===String(user?.ID)||comment?.userID===String(user?.ID)}
                         onDelete={()=>onDeleteComment(comment)}
                         highLight={userID===comment?.userID}
                         />
@@ -185,7 +186,7 @@ const postDetail = () => {
   )
 }
 
-export default postDetail
+export default PostDetail
 
 const styles = StyleSheet.create({
     container:{

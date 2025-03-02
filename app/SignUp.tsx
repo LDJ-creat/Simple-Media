@@ -14,7 +14,7 @@ import { HandleSignUp } from '@/services/getUserData'
 import { useUser } from '@/store/useUser'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const Login = () => {
+const SignUp = () => {
     const router = useRouter();
     const setUser=useUser(state=>state.setUser)
     const[loading, setLoading] = useState(false);
@@ -28,9 +28,9 @@ const Login = () => {
         }
         setLoading(true)
         const signUpData={
-            userName:name,
-            email:email,
-            password:password
+            username:name,
+            password:password,
+            email:email
         }
         const response=await HandleSignUp(signUpData)
         setUser(response.userData)
@@ -39,6 +39,7 @@ const Login = () => {
         setName('')
         setEmail('')
         setPassword('')
+        router.push('./home')
     }
     return (
         <ScreenWrapper bg="white">
@@ -60,14 +61,14 @@ const Login = () => {
 
                     <Input placeholder='Enter your email'
                      icon={<Icon name='email' size={26} strokeWidth={1.5}/>}
-                     onChangeText={setPassword}
-                     value={password}/>
+                     onChangeText={setEmail}
+                     value={email}/>
 
                     <Input placeholder='Enter your password'
                      icon={<Icon name='lock' size={26} strokeWidth={1.5}/>}
                      secureTextEntry={true}
-                     onChangeText={setEmail}
-                     value={email}/>
+                     onChangeText={setPassword}
+                     value={password}/>
 
                      <Button title={"Sign Up"} onPress={submit} loading={loading}></Button>
                 </View>
@@ -83,7 +84,7 @@ const Login = () => {
     )
 }
 
-export default Login
+export default SignUp
 
 const styles = StyleSheet.create({
     container: {

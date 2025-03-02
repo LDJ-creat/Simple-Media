@@ -1,4 +1,6 @@
 import api from "@/services/api"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 
 export interface mediaData{
@@ -15,8 +17,8 @@ export interface Post{
 export interface commentsData{
     userID:string,
     comment:string,
-    userName:string,
-    userAvatar:string,
+    username:string,
+    avatar:string,
     create_at:string,
 }
 
@@ -33,7 +35,7 @@ export interface commentsData{
 export interface getPost{
     postID:string,
     userID:string,
-    userName:string,
+    username:string,
     avatar:string,
     create_at:string,
     post:Post,
@@ -43,50 +45,59 @@ export interface getPost{
 
 
 export const createPost =async (post:Post)=>{
-    const form=new FormData()
-    post.media.forEach((item,index)=>{
-        form.append("media",{
-            uri:item.uri,
-            name:item.name,
-            type:item.type,
-        } as any)
+    const formData = new FormData()
+    
+    // 添加媒体文件
+    post.media.forEach((item) => {
+        const fileType = item.type === 'video' ? 'video/mp4' : 'image/jpeg'
+        const file = {
+            uri: Platform.OS === 'android' ? item.uri : item.uri.replace('file://', ''),
+            type: fileType,
+            name: item.name || `${Date.now()}.${fileType === 'video/mp4' ? 'mp4' : 'jpg'}`
+        }
+        formData.append('media[]', file as any)
     })
-    // post.videos.forEach((item,index)=>{
-    //     form.append("videos",{
-    //         uri:item.url,
-    //         name:"video"+index+".mp4",
-    //         type:"video/mp4",
-    //         id:item.id,
-    //     } as any)
-    // })
-    form.append("content",post.content)
-    try{
-        const response=await api.post("/post",form)
+
+    // 添加文本内容
+    formData.append('content', post.content)
+
+    try {
+        const response = await api.post("/post", formData)
         return response.data
-    }catch(error){
-        console.log(error)
+    } catch(error) {
+        console.log('[CreatePost Error]:', error)
+        throw error
     }
 }
 
 
 export const updatePost=async (post:Post)=>{
-    const keepMedia=post.media.filter((item)=>item.id)
-    const newMedia=post.media.filter((item)=>!item.id)
-    const form=new FormData()
-    const keepMediaIDs=keepMedia.map((item)=>item.id)
-    form.append("keepMediaIDs",keepMediaIDs.join(","))
-    newMedia.forEach((item,index)=>{
-        form.append("media",{
-            uri:item.uri,
-            name:item.name,
-            type:item.type,
-        } as any)
+    const formData = new FormData()
+    
+    // 添加保留的媒体ID
+    const keepMedia = post.media.filter(item => item.id)
+    formData.append('keepMediaIDs', keepMedia.map(item => item.id).join(','))
+    
+    // 添加新媒体文件
+    const newMedia = post.media.filter(item => !item.id)
+    newMedia.forEach((item) => {
+        const fileType = item.type === 'video' ? 'video/mp4' : 'image/jpeg'
+        const file = {
+            uri: Platform.OS === 'android' ? item.uri : item.uri.replace('file://', ''),
+            type: fileType,
+            name: item.name || `${Date.now()}.${fileType === 'video/mp4' ? 'mp4' : 'jpg'}`
+        }
+        formData.append('media[]', file as any)
     })
-    form.append("content",post.content)
-    try{
-        await api.put(`/post/${post.postID}`,form)
-    }catch(error){
-        console.log(error)
+
+    // 添加文本内容
+    formData.append('content', post.content)
+
+    try {
+        await api.put(`/post/${post.postID}`, formData)
+    } catch(error) {
+        console.log('[UpdatePost Error]:', error)
+        throw error
     }
 }
 

@@ -20,10 +20,10 @@ const editProfile = () => {
   const updateUser = useUser(state => state.updateUser);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    avatar: user?.avatar || '',
-    userName: user?.userName || '',
-    phone: user?.phone || '',
-    signature: user?.signature || ''
+    avatar: user?.Avatar || '',
+    userName: user?.Username || '',
+    phone: user?.Phone || '',
+    signature: user?.Signature || ''
   });
 
 //   useEffect(() => {
@@ -106,7 +106,7 @@ const editProfile = () => {
       await api.put('/updateUser', data);
 
       // 更新本地状态
-      updateUser(formData);
+      updateUser({...formData,ID:user?.ID});
       Alert.alert("Success", "Profile updated successfully");
       router.back();
     } catch (error) {

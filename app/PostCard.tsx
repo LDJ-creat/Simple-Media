@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert, Share as RNShare } from 'react-native'
 import React, { useState } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
@@ -10,7 +10,6 @@ import RenderHtml from "react-native-render-html"
 import { Video,ResizeMode } from 'expo-av'
 import { useUser } from '@/store/useUser'
 import { stripHtmlTags } from '@/helper/common'
-import Share from 'react-native-share';
 
 interface PostCardProps {
     item?: getPost;
@@ -29,37 +28,29 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     const user=useUser(state=>state.user)
     const [likes,setLikes]=useState(item?.postLikes || [])
     // const [comments,setComments]=useState(item?.comments || [])
-    const liked=likes?.find(like=>like==user?.userID)?true:false
+    const liked=likes?.find(like=>like==String(user?.ID))?true:false
     const onLike =async () => {
-        if (!user?.userID || !item?.postID) return;
+        if (!user?.ID || !item?.postID) return;
         
         if(liked){
-            let updateLikes=likes?.filter(like=>like!=user.userID)
+              let updateLikes=likes?.filter(like=>like!=String(user.ID))
             setLikes([...updateLikes])
             removePostLike(item.postID)
         }else{
-            setLikes([...likes, user.userID])
+            setLikes([...likes, String(user.ID)])
             createPostLike(item.postID)
         }
     }
 
-    const share=async()=>{
-        let content = stripHtmlTags(item?.post?.content || '')
-        let mediaUrls: string[] = [...(item?.post?.media?.map(i => i.uri) || [])]
-        
-        //react-native原生的share仅支持分享单张图片或单个视频，所以这里使用react-native-share
-        try{
-          const shareOptions = {
-            message: content,
-            urls: mediaUrls,
-          }
-
-          await Share.open(shareOptions);
+    const share = async () => {
+        try {
+            const content = stripHtmlTags(item?.post?.content || '')
+            await RNShare.share({
+                message: content,
+            });
         } catch (error) {
-          console.error('分享失败:', error);
+            console.error('分享失败:', error);
         }
-        //方案二：
-        // 先下载图片和视频再利用本地url分享
     }
 
     const handleDeletePost=()=>{
@@ -145,7 +136,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
             rounded={theme.radius.md}
           />
           <View style={{gap:2}}>
-            <Text style={styles.userName}>{item?.userName}</Text>
+            <Text style={styles.userName}>{item?.username}</Text>
             <Text style={styles.postTime}>{postTime}</Text>
           </View>    
           {showMoreIcons && (

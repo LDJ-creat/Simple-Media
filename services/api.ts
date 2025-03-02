@@ -7,22 +7,32 @@ const api = axios.create({
   // 或
   // baseURL: 'http://localhost:8080', // iOS 模拟器
   timeout: 10000, // 超时时间
-  headers: {
-    'Content-Type': 'application/json'
-  }
 });
 
 // 请求拦截器
 api.interceptors.request.use(
   async config => {
-    // 可以在这里统一添加token
-    const token =await AsyncStorage.getItem('authToken'); // 从存储中获取token
+    const token = await AsyncStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // 处理 FormData
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
+    }
+
+    console.log('发送请求:', {
+      url: config.url,
+      method: config.method,
+      data: config.data,
+      headers: config.headers
+    });
+
     return config;
   },
   error => {
+    console.error('请求拦截器错误:', error);
     return Promise.reject(error);
   }
 );
@@ -30,9 +40,20 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   response => {
-    return response.data;
+    console.log('收到响应:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      headers: response.headers
+    });
+    return response;
   },
   error => {
+    console.error('响应拦截器错误:', {
+      message: error.message,
+      response: error.response,
+      request: error.request
+    });
     // 统一错误处理
     if (error.response) {
       switch (error.response.status) {

@@ -15,6 +15,7 @@ import Loading from '@/components/Loading'
 import PostCard from './PostCard'
 import api from '@/services/api'
 import useMyPosts from '@/store/useMyPosts'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Router, handleLogout: () => void }) => {
   
   return (
@@ -30,7 +31,7 @@ const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Ro
           <View style={{gap:15}}>
             <View style={styles.avatarContainer}>
               <Avatar
-                uri={user?.avatar || ""}
+                uri={user?.Avatar || ""}
                 size={hp(12)}
                 rounded={theme.radius.xxl*1.4}
               />
@@ -40,21 +41,21 @@ const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Ro
             </View>
 
             <View style={{alignItems:'center',gap:4}}>
-              <Text style={styles.userName}>{user?.userName}</Text>
+              <Text style={styles.userName}>{user?.Username}</Text>
             </View>
 
             <View style={{gap:10}}>
               <View style={styles.info}>
                 <Icon name="email" size={20} color={theme.colors.textLight}/>
-                <Text style={styles.infoText}>{user?.email}</Text>
+                <Text style={styles.infoText}>{user?.Email}</Text>
               </View>
               <View style={styles.info}>
                 <Icon name="phone" size={20} color={theme.colors.textLight}/>
-                <Text style={styles.infoText}>{user?.phone}</Text>
+                <Text style={styles.infoText}>{user?.Phone || ''}</Text>
               </View>
               <View style={styles.info}>
                 <Icon name="signature" size={20} color={theme.colors.textLight}/>
-                <Text style={styles.infoText}>{user?.signature}</Text>
+                <Text style={styles.infoText}>{user?.Signature || ''}</Text>
               </View>
             </View>
           </View>
@@ -63,7 +64,7 @@ const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Ro
   )
 }
 
-const profile = () => {
+const Profile = () => {
   const router = useRouter();
   const setUser = useUser(state => state.setUser);
   const user = useUser(state => state.user);
@@ -73,6 +74,17 @@ const profile = () => {
   const posts = useMyPosts(state => state.myPosts)
   const setMyPosts = useMyPosts(state => state.setMyPosts)//全局管理myPosts
   const clearMyPosts = useMyPosts(state => state.clearMyPosts)
+
+  useEffect(()=>{
+    const token=AsyncStorage.getItem('token')
+    if(token!=null && user?.ID==null){
+      const getUser=async()=>{
+        const response=await api.get('/getUserInfo')
+        setUser(response.data.userData)
+      }
+      getUser()
+    }
+  },[])
 
 
   const fetchMyPosts=async(currentCursor:string|null)=>{
@@ -88,7 +100,7 @@ const profile = () => {
         setCursor(nextCursor)
         setMyPosts([...posts, ...newPosts])
     }catch(error){
-        console.error("Fail to fetch my posts:",error)
+        console.log("Fail to fetch my posts:",error)
     }
  }
  
@@ -166,7 +178,7 @@ const profile = () => {
   )
 }
 
-export default profile
+export default Profile
 
 const styles = StyleSheet.create({
   container:{
