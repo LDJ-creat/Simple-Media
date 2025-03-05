@@ -19,7 +19,8 @@ api.interceptors.request.use(
 
     // 处理 FormData
     if (config.data instanceof FormData) {
-      config.headers['Content-Type'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
+      // 显式设置 Content-Type 为 multipart/form-data
+      config.headers['Content-Type'] = 'multipart/form-data';
     }
 
     console.log('发送请求:', {

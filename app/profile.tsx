@@ -159,7 +159,7 @@ const Profile = () => {
                 <PostCard
                 item={item}
                 router={router}
-                onDeletePost={()=>handleDeletePost(item.postID as string)}
+                onDeletePost={()=>handleDeletePost(String(item.ID))}
                 />
             )}
             onEndReached={handleLoadMore}

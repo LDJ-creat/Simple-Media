@@ -89,24 +89,19 @@ const editProfile = () => {
         Alert.alert("There should be a username")
         return
     }
+    const data = new FormData();
+    data.append('avatar', {
+      uri: formData.avatar,
+      type: 'image/jpeg',
+      name: 'avatar.jpg'
+    } as any);
+
+    data.append('userName', formData.userName);
+    data.append('phone', formData.phone);
+    data.append('signature', formData.signature);
     setLoading(true);
     try {
-      // 调用API更新用户信息
-      const data = new FormData();
-      data.append('avatar', {
-        uri: formData.avatar,
-        type: 'image/jpeg',
-        name: 'avatar.jpg'
-      } as any);
-
-      data.append('userName', formData.userName);
-      data.append('phone', formData.phone);
-      data.append('signature', formData.signature);
-
       await api.put('/updateUser', data);
-
-      // 更新本地状态
-      updateUser({...formData,ID:user?.ID});
       Alert.alert("Success", "Profile updated successfully");
       router.back();
     } catch (error) {
@@ -114,6 +109,8 @@ const editProfile = () => {
     } finally {
       setLoading(false);
     }
+    // 更新本地状态
+    updateUser({...formData,ID:user?.ID});
   }
 
 

@@ -14,6 +14,7 @@ import Avatar from '@/components/Avatar';
 import { FlatList } from 'react-native-gesture-handler';
 import { Video, ResizeMode } from 'expo-av';
 import useMyPosts from '@/store/useMyPosts'
+import { userData } from '@/services/getUserData';
 
 const NewPost = () => {
   const [loading,setLoading]=useState(false)
@@ -90,14 +91,16 @@ const NewPost = () => {
       return
     }
     const myPost:getPost={
-      postID:post.postID as string,
-      userID:user?.ID as unknown as string,
-      username:user?.Username as unknown as string,
-      avatar:user?.Avatar as unknown as string,
-      create_at:new Date().toISOString(),
-      postLikes:[],
-      comments:[],
-      post:post
+      ID:post.postID as unknown as number,
+      User:user as userData,
+      Content:content,
+      LikeCount:[],
+      Media:media,
+      Comment:[],
+      CreatedAt:new Date().toISOString(),
+      UpdatedAt:new Date().toISOString(),
+      DeletedAt:null,
+      UserID:user?.ID as unknown as number,
     }
 
     if(editPost){
@@ -105,21 +108,21 @@ const NewPost = () => {
       updateMyPosts(myPost)
     }else{
       const response=await createPost(post)
-      post.postID=response.postID
-      myPost.postID=response.postID
-      myPost.post.postID=response.postID
+      myPost.ID=response.postID
       addMyPosts(myPost)
     }
 
     setLoading(true)
     //清空显示区域
-    setContent('')
+    setContent('')  
     setMedia([])
     setLoading(false)
-    router.navigate({pathname:'/home',params:{
-      refresh:'true',
-      postID:post.postID
-    }})
+    // router.navigate({pathname:'/home',params:{
+    //   refresh:'true',
+    //   postID:post.postID
+    // }})
+
+    router.navigate({pathname:'/home'})
 
   }
 
@@ -156,10 +159,10 @@ const NewPost = () => {
                 return
               }
               const newMedia = result.assets.map(asset => ({
-                id: '',
-                uri: asset.uri,
-                name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
-                type: isImage ? 'image' : 'video'
+                ID: '',
+                Uri: asset.uri,
+                Name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
+                Type: isImage ? 'image' : 'video'
               }));
               setMedia([...media, ...newMedia]);
 
@@ -187,10 +190,10 @@ const NewPost = () => {
               return;
             }
             const newMedia = result.assets.map(asset => ({
-              id: '',
-              uri: asset.uri,
-              name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
-              type: isImage ? 'image' : 'video'
+              ID: '',
+              Uri: asset.uri,
+              Name: asset.fileName || `${Date.now()}.${isImage ? 'jpg' : 'mp4'}`,
+              Type: isImage ? 'image' : 'video'
             }));
             setMedia([...media, ...newMedia]);
           }
@@ -369,14 +372,14 @@ const NewPost = () => {
   `;
 
   const renderMediaItem = ({ item }: { item: mediaData }) => {
-    const isVideo = item.uri.includes('.mp4') || item.uri.includes('.mov') || item.uri.includes('VID');
+    const isVideo = item.Uri.includes('.mp4') || item.Uri.includes('.mov') || item.Uri.includes('VID');
 
     return (
       <View style={styles.mediaPreviewContainer}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => {
-             setMedia(media.filter(m=>m.id!==item.id))
+             setMedia(media.filter(m=>m.ID!==item.ID))
           }}
         >
           <Icon name="delete" size={16} />
@@ -384,16 +387,16 @@ const NewPost = () => {
         
         {isVideo ? (
           <Video
-            source={{ uri: item.uri }}
+            source={{ uri: item.Uri }}
             style={styles.mediaPreview}
             resizeMode={ResizeMode.COVER} 
             isLooping
-            isMuted={true}
+            isMuted={true}  
             shouldPlay={false}
           />
         ) : (
           <Image
-            source={{ uri: item.uri }}
+            source={{ uri: item.Uri }}
             style={styles.mediaPreview}
             resizeMode="cover"
           />

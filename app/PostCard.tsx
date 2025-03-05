@@ -26,25 +26,25 @@ interface PostCardProps {
 
 const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
     const user=useUser(state=>state.user)
-    const [likes,setLikes]=useState(item?.postLikes || [])
-    // const [comments,setComments]=useState(item?.comments || [])
-    const liked=likes?.find(like=>like==String(user?.ID))?true:false
+    const [likes,setLikes]=useState<string[]>([])
+    const liked = likes.find(like => like === String(user?.ID)) ? true : false
+    
     const onLike =async () => {
-        if (!user?.ID || !item?.postID) return;
+        if (!user?.ID || !item?.ID) return;
         
         if(liked){
-              let updateLikes=likes?.filter(like=>like!=String(user.ID))
+            let updateLikes = likes.filter(like => like !== String(user.ID))
             setLikes([...updateLikes])
-            removePostLike(item.postID)
+            removePostLike(String(item.ID))
         }else{
             setLikes([...likes, String(user.ID)])
-            createPostLike(item.postID)
+            createPostLike(String(item.ID))
         }
     }
 
     const share = async () => {
         try {
-            const content = stripHtmlTags(item?.post?.content || '')
+            const content = stripHtmlTags(item?.Content || '')
             await RNShare.share({
                 message: content,
             });
@@ -117,73 +117,69 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
         elevation:1,     
         
       }
-      const postTime=moment(item?.create_at).format("YYYY-MM-DD HH:mm")
+      const postTime = moment(item?.CreatedAt).format("YYYY-MM-DD HH:mm")
 
-      const openPostDetails=()=>{
+      const openPostDetails = () => {
         if(!showMoreIcons) return null;
-        // 跳转至帖子详情页面---通过URL传递postID以实现详情页通过postID获取对应帖子的详情
-        router.push({pathname:'/postDetail',params:{postID:item?.postID}})
+        router.push({pathname:'/postDetail',params:{postID: String(item?.ID)}})
       }
 
 
   return (
     <View style={[styles.container,hasShadow && shadowStyles]}>
       <View style={styles.header}>
-        <View style={styles.userInfo}>
+        <View style={styles.headerLeft}>
           <Avatar
             size={hp(4.5)}
-            uri={item?.avatar||""}
+            uri={item?.User?.Avatar || ""}
             rounded={theme.radius.md}
           />
           <View style={{gap:2}}>
-            <Text style={styles.userName}>{item?.username}</Text>
+            <Text style={styles.userName}>{item?.User?.Username}</Text>
             <Text style={styles.postTime}>{postTime}</Text>
           </View>    
+        </View>
+
+        <View style={styles.headerRight}>
           {showMoreIcons && (
             <TouchableOpacity onPress={openPostDetails}>
               <Icon name="dotsHorizontal" size={hp(3.4)} strokeWidth={3} color="black"/>
             </TouchableOpacity>
           )}
+          {showDelete && (
+            <View style={styles.actions}>
+              <TouchableOpacity onPress={onEditPost}>
+                <Icon name="edit" size={hp(3.4)} strokeWidth={3} color="black"/>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDeletePost}>
+                <Icon name="delete" size={hp(3.4)} strokeWidth={3} color="black"/>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
 
-
-          {
-            showDelete && (
-              <View style={styles.actions}>
-                <TouchableOpacity onPress={onEditPost}>
-                  <Icon name="edit" size={hp(3.4)} strokeWidth={3} color="black"/>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleDeletePost}>
-                  <Icon name="delete" size={hp(3.4)} strokeWidth={3} color="black"/>
-                </TouchableOpacity>
-              </View>
-            )
-          }
+      <View style={styles.content}>
+        <View style={styles.postBody}>
+          {item?.Content && (
+            <RenderHtml
+              contentWidth={wp(90)}
+              source={{html: item.Content}}
+              tagsStyles={tagStyles}
+            />
+          )}
         </View>
 
-
-
-        <View style={styles.content}>
-          <View style={styles.postBody}>
-            {item?.post?.content && (
-              <RenderHtml
-                contentWidth={wp(100)}
-                source={{html:item?.post?.content}}
-                tagsStyles={tagStyles}
-              />
-            )}
-          </View>
-        </View>
-
-        {item?.post?.media && (
+        {item?.Media && item.Media.length > 0 && (
           <FlatList
-          data={[...item?.post?.media.map(i=>i.uri)]}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderMediaItem}
-          style={styles.mediaList}
-          contentContainerStyle={styles.mediaListContent}
-        />
+            data={item.Media.map(i => i.Uri)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderMediaItem}
+            style={styles.mediaList}
+            contentContainerStyle={styles.mediaListContent}
+          />
         )}
       </View>
 
@@ -192,13 +188,13 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
           <TouchableOpacity onPress={onLike}>
             <Icon name="heart" size={24} strokeWidth={2} fill={liked?"red":"transparent"} color={liked?"red":"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>{likes?.length}</Text>
+          <Text style={styles.count}>{item?.LikeCount || 0}</Text>
         </View>
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={openPostDetails}>
             <Icon name="comment" size={24} strokeWidth={2} color={"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>{commentsCount}</Text>
+          <Text style={styles.count}>{(item?.Comment?.length || 0)}</Text>
         </View>
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={share}>
@@ -220,19 +216,26 @@ const styles = StyleSheet.create({
         borderCurve:'continuous',
         borderWidth:0.5,
         backgroundColor:"white",
-        padding:10,
-        paddingHorizontal:12,
+        padding:15,
+        paddingHorizontal:15,
         borderColor:theme.colors.gray,
         shadowColor:'#000',
     },
     header:{
         flexDirection:'row',
         justifyContent:'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
     },
-    userInfo:{
+    headerLeft:{
         flexDirection:'row',
         alignItems:'center',
         gap:8,
+    },
+    headerRight:{
+        flexDirection:'row',
+        alignItems:'center',
+        gap:10,
     },
     userName:{
         fontSize:hp(1.7),
@@ -245,21 +248,22 @@ const styles = StyleSheet.create({
         fontWeight:'600',
     },
     content:{
-        gap:10,
-    },
-    postMedia:{
-        width:"40%",
-        height:hp(20),
-        borderRadius:theme.radius.xl,
-        borderCurve:'continuous',   
+        flex: 1,
+        width: '100%',
     },
     postBody:{
-        marginLeft:5,
+        width: '100%',
+        alignItems: 'flex-start',
+        paddingHorizontal: 5,
     },
     footer:{
         flexDirection:'row',
         alignItems:'center',
         gap:15,
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 0.5,
+        borderTopColor: theme.colors.gray,
     },
     footerButton:{
         marginLeft:5,
@@ -276,30 +280,21 @@ const styles = StyleSheet.create({
         color:theme.colors.text,
         fontSize:hp(1.7),
     },
-    media: {
-        width: wp(100),
-        height: hp(30),
-        borderRadius: theme.radius.md,
-    },
-    imageList: {
-        gap: 10,
-        paddingHorizontal: 5,
-        maxHeight:hp(20),
-    },
     mediaList: {
         maxHeight: hp(20),
+        marginTop: 10,
     },
     mediaListContent: {
-    paddingHorizontal: 10,
+        paddingHorizontal: 10,
     },
     mediaPreviewContainer: {
-    position: 'relative',
-    marginRight: 10,
+        position: 'relative',
+        marginRight: 10,
     },
     mediaPreview: {
-    width: wp(30),
-    height: wp(30),
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.gray,
+        width: wp(30),
+        height: wp(30),
+        borderRadius: theme.radius.lg,
+        backgroundColor: theme.colors.gray,
     },
 })

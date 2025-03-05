@@ -15,7 +15,7 @@ interface CommentItemProps {
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete,highLight}) => {
-  const createAt=moment(item?.create_at).format('YYYY-MM-DD HH:mm:ss')
+  const createAt=moment(item?.CreatedAt).format('YYYY-MM-DD HH:mm:ss')
 
 
   const handleDelete=()=>{
@@ -37,12 +37,12 @@ const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete,highL
   return (
     <View  style={[styles.container,highLight&&styles.highLight]}>
       <Avatar
-        uri={item?.userAvatar||""}
+          uri={item?.User?.Avatar||""}
       />
       <View style={styles.content}>
         <View style={{flexDirection:'row',alignItems:'center',gap:3,justifyContent:'space-between'}}>
           <View style={styles.nameContainer}>
-            <Text style={styles.text}>{item?.userName}</Text>
+            <Text style={styles.text}>{item?.Username}</Text>
             <Text>·</Text>
             <Text style={[styles.text,{color:theme.colors.textLight}]}>{createAt}</Text>
           </View>
@@ -53,7 +53,7 @@ const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete,highL
                 </TouchableOpacity>)
           }
         </View>
-        <Text style={styles.text}>{item?.comment}</Text>
+        <Text style={styles.text}>{item?.Content}</Text>
       </View>
 
 

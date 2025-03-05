@@ -19,12 +19,12 @@ const useMyPosts = create<MyPostsState>((set) => ({
         })),
     deleteMyPosts: (postID) =>
         set((state) => ({
-            myPosts: state.myPosts.filter((post) => post.postID !== postID),
+            myPosts: state.myPosts.filter((post) => String(post.ID) !== postID),
         })),
     updateMyPosts: (updatedPost) =>
         set((state) => ({
             myPosts: state.myPosts.map((post) =>
-                post.postID === updatedPost.postID ? updatedPost : post
+                post.ID === updatedPost.ID ? updatedPost : post
             ),
         })),
     clearMyPosts: () =>

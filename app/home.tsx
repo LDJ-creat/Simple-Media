@@ -37,7 +37,8 @@ const Home = () => {
             const response=await api.get(`/getPosts?${params}`)
             const newPosts: getPost[]=response.data.posts || [];
             const nextCursor=response.headers['x-next-cursor'] || null
-            setHasMore(newPosts.length>0)
+            setHasMore(newPosts.length==10)//后端设置了一次返回10条，如果返回的帖子数量为10，则有更多帖子
+            console.log('收到的帖子数据:', JSON.stringify(newPosts, null, 2));
             setCursor(nextCursor)
             setPosts(prev=>[...(prev || []), ...newPosts])
         }catch(error){
@@ -66,17 +67,17 @@ const Home = () => {
         setIsRefreshing(false)
     }
 
-    useEffect(()=>{
-        if(refresh){
-            handleRefresh()
-        }
-        if(postID){
-            const post=myPosts.find(post=>post.postID===postID)
-            if(post){
-                setNewPost(post)
-            }
-        }
-    },[refresh,postID])
+    // useEffect(()=>{
+    //     if(refresh){
+    //         handleRefresh()
+    //     }
+    //     if(postID){
+    //         const post=myPosts.find(post=>post.postID===postID)
+    //         if(post){
+    //             setNewPost(post)
+    //         }
+    //     }
+    // },[refresh,postID])
 
 
     useEffect(() => {
@@ -105,6 +106,9 @@ const Home = () => {
             ws.onmessage = (e) => {
                 try {
                     const data = JSON.parse(e.data);
+                    if(data.type==="new_post"){
+                        setNewPost(data.post)
+                    }
                     if (data.type === 'notification') {
                         setNotificationsCount(prev => prev + data.count);
                     }
@@ -180,7 +184,7 @@ const Home = () => {
             }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
-            keyExtractor={(item, index) => item.postID || index.toString()}
+            keyExtractor={(item, index) => String(item.ID) || index.toString()}
             renderItem={({item}) => (
                 <PostCard
                     item={item}

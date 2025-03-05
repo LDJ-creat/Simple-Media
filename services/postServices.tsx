@@ -1,13 +1,14 @@
 import api from "@/services/api"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { userData } from "./getUserData";
 
 
 export interface mediaData{
-    id:string,
-    uri:string,
-    name:string,
-    type:string,
+    ID:string,
+    Uri:string,
+    Name:string,
+    Type:string,
 }
 export interface Post{
     content:string,
@@ -15,11 +16,12 @@ export interface Post{
     postID?: string,
 }
 export interface commentsData{
-    userID:string,
-    comment:string,
-    username:string,
-    avatar:string,
-    create_at:string,
+    PostID:string,
+    UserID:string,
+    Content:string,
+    Username:string,
+    CreatedAt:string,
+    User:userData,
 }
 
 // export interface fetchPost{
@@ -32,37 +34,59 @@ export interface commentsData{
 //     postLikes:number,
 //     commentCount:number,
 // }
-export interface getPost{
-    postID:string,
-    userID:string,
-    username:string,
-    avatar:string,
-    create_at:string,
-    post:Post,
-    postLikes:string[],//存储点赞的用户的userID
-    comments:commentsData[],
+export interface getPost {
+    ID: number;
+    CreatedAt: string;
+    UpdatedAt: string;
+    DeletedAt: null | string;
+    UserID: number;
+    Content: string;
+    LikeCount:string[];
+    Media: mediaData[];
+    // User: {
+    //     ID: number;
+    //     CreatedAt: string;
+    //     UpdatedAt: string;
+    //     DeletedAt: null | string;
+    //     Username: string;
+    //     Email: string;
+    //     Phone: string;
+    //     Avatar: string;
+    //     Signature: string;
+    // };
+    User:userData,
+    Comment: commentsData[],
 }
 
 
 export const createPost =async (post:Post)=>{
     const formData = new FormData()
     
-    // 添加媒体文件
-    post.media.forEach((item) => {
-        const fileType = item.type === 'video' ? 'video/mp4' : 'image/jpeg'
-        const file = {
-            uri: Platform.OS === 'android' ? item.uri : item.uri.replace('file://', ''),
-            type: fileType,
-            name: item.name || `${Date.now()}.${fileType === 'video/mp4' ? 'mp4' : 'jpg'}`
-        }
-        formData.append('media[]', file as any)
-    })
-
     // 添加文本内容
     formData.append('content', post.content)
+    
+    // 添加媒体文件
+    if (post.media && post.media.length > 0) {
+        post.media.forEach((item) => {
+            const fileType = item.Type === 'video' ? 'video/mp4' : 'image/jpeg'
+            const fileName = item.Name || `${Date.now()}.${item.Type === 'video' ? 'mp4' : 'jpg'}`
+            
+            // 确保文件对象格式正确
+            const fileData = {
+                uri: Platform.OS === 'android' ? item.Uri : item.Uri.replace('file://', ''),
+                type: fileType,
+                name: fileName
+            }
+            
+            // 使用正确的字段名添加文件
+            formData.append('media[]', fileData as any)
+        })
+    }
 
     try {
+        console.log('FormData content:', JSON.stringify(Array.from((formData as any)._parts)));
         const response = await api.post("/post", formData)
+        console.log('Response:', response.data);
         return response.data
     } catch(error) {
         console.log('[CreatePost Error]:', error)
@@ -75,17 +99,17 @@ export const updatePost=async (post:Post)=>{
     const formData = new FormData()
     
     // 添加保留的媒体ID
-    const keepMedia = post.media.filter(item => item.id)
-    formData.append('keepMediaIDs', keepMedia.map(item => item.id).join(','))
+    const keepMedia = post.media.filter(item => item.ID)
+    formData.append('keepMediaIDs', keepMedia.map(item => item.ID).join(','))
     
     // 添加新媒体文件
-    const newMedia = post.media.filter(item => !item.id)
+    const newMedia = post.media.filter(item => !item.ID)
     newMedia.forEach((item) => {
-        const fileType = item.type === 'video' ? 'video/mp4' : 'image/jpeg'
+        const fileType = item.Type === 'video' ? 'video/mp4' : 'image/jpeg'
         const file = {
-            uri: Platform.OS === 'android' ? item.uri : item.uri.replace('file://', ''),
+            uri: Platform.OS === 'android' ? item.Uri : item.Uri.replace('file://', ''),
             type: fileType,
-            name: item.name || `${Date.now()}.${fileType === 'video/mp4' ? 'mp4' : 'jpg'}`
+            name: item.Name || `${Date.now()}.${fileType === 'video/mp4' ? 'mp4' : 'jpg'}`
         }
         formData.append('media[]', file as any)
     })
@@ -121,7 +145,7 @@ export const createPostLike=async (postID:string)=>{
 
 export const removePostLike=async (postID: string)=>{
     try{
-        await api.post(`/subLike/${postID}`)
+        await api.put(`/subLike/${postID}`)
     }catch (error){
         console.log(error)
     }
