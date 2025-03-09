@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert, Share as RNShare } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
 import Avatar from '@/components/Avatar'
@@ -25,19 +25,31 @@ interface PostCardProps {
 
 
 const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
+
     const user=useUser(state=>state.user)
     const [likes,setLikes]=useState<string[]>([])
-    const liked = likes.find(like => like === String(user?.ID)) ? true : false
+    // const liked = likes.find(like => like === String(user?.ID)) ? true : false
+    const [liked,setLiked]=useState(()=>{
+      return likes.find(like => like === String(user?.ID)) ? true : false
+    })
     
+    useEffect(() => {
+        if (item?.LikeCount) {
+            setLikes(item.LikeCount)
+        }
+    }, [item])
+
     const onLike =async () => {
         if (!user?.ID || !item?.ID) return;
         
         if(liked){
             let updateLikes = likes.filter(like => like !== String(user.ID))
             setLikes([...updateLikes])
+            setLiked(false)
             removePostLike(String(item.ID))
         }else{
             setLikes([...likes, String(user.ID)])
+            setLiked(true)
             createPostLike(String(item.ID))
         }
     }
@@ -188,13 +200,13 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
           <TouchableOpacity onPress={onLike}>
             <Icon name="heart" size={24} strokeWidth={2} fill={liked?"red":"transparent"} color={liked?"red":"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>{item?.LikeCount || 0}</Text>
+          <Text style={styles.count}>{likes.length || 0}</Text>
         </View>
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={openPostDetails}>
             <Icon name="comment" size={24} strokeWidth={2} color={"black"}/>
           </TouchableOpacity>
-          <Text style={styles.count}>{(item?.Comment?.length || 0)}</Text>
+          <Text style={styles.count}>{commentsCount || 0}</Text>
         </View>
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={share}>

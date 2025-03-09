@@ -94,15 +94,16 @@ const Profile = () => {
             params.append("last_id",currentCursor);
         }
         const response=await api.get(`/getMyPosts?${params}`)
-        const newPosts: getPost[]=response.data
+        const newPosts: getPost[]=response.data.posts
+        console.log('收到的帖子数据:', JSON.stringify(newPosts, null, 2));
         const nextCursor=response.headers['x-next-cursor'] || null
-        setHasMore(newPosts.length>0)
+        setHasMore(newPosts.length==10)
         setCursor(nextCursor)
         setMyPosts([...posts, ...newPosts])
     }catch(error){
-        console.log("Fail to fetch my posts:",error)
+        console.log("Fail to fetch my posts:", error)
     }
- }
+  }
  
   useEffect(()=>{
       if(posts.length===0 && hasMore){

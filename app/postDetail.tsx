@@ -21,7 +21,7 @@ const PostDetail = () => {
     const [postCommentLoading,setPostCommentLoading]=useState(false)
     const inputRef = useRef<TextInput>(null)
     const commentRef = useRef('')
-    const [comments,setComments]=useState(post?.comments || [])
+    const [comments,setComments]=useState<any[]>([])
     const deleteMyPost = useMyPosts(state => state.deleteMyPosts)
     
     
@@ -47,8 +47,12 @@ const PostDetail = () => {
     useEffect(()=>{
         const fetchPost = async () => {
             const postResponse = await getPostDetails(postID as string)
-            setPost(postResponse)
+            // 检查并正确解构数据
+            const postData = postResponse.post || postResponse
+            setPost(postData)
+            setComments(postData?.Comment || [])
             setLoading(false)
+            console.log("comments:",comments)
         }
         fetchPost()
     },[])
@@ -60,16 +64,18 @@ const PostDetail = () => {
         setPostCommentLoading(true)
         if(!user?.ID) return
         let data={
-            postID:postID as string,
-            comment:commentRef.current,
+            PostID:Number(postID),
+            Content:commentRef.current,
         }
         let newComment={
-            userID:String(user?.ID),
-            comment:commentRef.current,
-            username:user?.Username,
-            avatar:user?.Avatar,
-            create_at:new Date().toISOString(),
+            PostID:postID as string,
+            UserID:String(user?.ID),
+            Content:commentRef.current,
+            Username:user?.Username,
+            CreatedAt:new Date().toISOString(),
+            User:user,
         }
+        console.log("newComment:",data)
         await postComment(data)
 
         setPostCommentLoading(false)
@@ -81,7 +87,7 @@ const PostDetail = () => {
     }
 
     const onDeleteComment=async (comment:commentsData)=>{
-        const newComments=comments.filter((c)=>c.userID!==comment.userID)
+        const newComments=comments.filter((c)=>c.UserID!==comment.UserID)
         setComments(newComments)
         await deleteComment(postID as string)
 
@@ -115,7 +121,7 @@ const PostDetail = () => {
             commentsCount={comments.length} 
             router={router} hasShadow={false}  
             showMoreIcons={false}
-            showDelete={post?.userID===String(user?.ID)}
+            showDelete={post?.UserID===user?.ID}
             onDeletePost={()=>onDeletePost(postID as string)}
             onEditPost={()=>onEditPost(post)}
         />
@@ -153,21 +159,21 @@ const PostDetail = () => {
         </View>
 
 
-        <View style={{marginVertical:15, gap:17}}>
+        <View style={{marginVertical:15, gap:17,display:'flex',flexDirection:'column',alignItems:'center'}}>
             {
-                post?.comments.map((comment)=>(
+                comments.map((comment)=>(
                     <CommentItem
                         item={comment}
-                        canDelete={post?.userID===String(user?.ID)||comment?.userID===String(user?.ID)}
+                        canDelete={post?.UserID===user?.ID||comment?.UserID===String(user?.ID)}
                         onDelete={()=>onDeleteComment(comment)}
-                        highLight={userID===comment?.userID}
+                        highLight={userID===comment?.UserID}
                         />
                 ))
 
 
             }
             {
-                post?.comments?.length==0&&(
+                comments.length==0&&(
 
                     <Text style={{color:theme.colors.text,marginLeft:5}}>
                         Be first to comment!
@@ -220,6 +226,10 @@ const styles = StyleSheet.create({
         borderCurve:'continuous',
         height:hp(5.8),
         width:hp(5.8),
+        cursor:'pointer',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
     },
     notFound:{
         fontSize:hp(2.5),

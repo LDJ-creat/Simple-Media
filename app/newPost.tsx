@@ -1,5 +1,5 @@
 import React, { useState, useRef,useEffect } from 'react';
-import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image } from 'react-native';
+import { SafeAreaView, StyleSheet, View, TouchableOpacity, Text, Alert, Image, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Header from '@/components/Header'
 import Button from '@/components/Button'
@@ -27,20 +27,22 @@ const NewPost = () => {
   const editPost = params.post ? JSON.parse(decodeURIComponent(params.post as string)) : null;
   const addMyPosts = useMyPosts(state => state.addMyPosts)
   const updateMyPosts = useMyPosts(state => state.updateMyPosts)
+  const [webViewLoaded, setWebViewLoaded] = useState(false);
   
 
   useEffect(()=>{
-    if(editPost){
-      setContent(editPost.content)
-      setMedia(editPost.media)
-
+    if(editPost && webViewLoaded){
+      console.log("editPost:",editPost)
+      setContent(editPost.Content || '')
+      setMedia(editPost.Media || [])
+      
       // 注入原内容到WebView
       webViewRef.current?.injectJavaScript(`
-        setContent(\`${editPost.content}\`);
+        setContent(\`${editPost.Content.replace(/`/g, '\\`') || ''}\`);
         true;
       `);
     }
-  },[])
+  },[webViewLoaded])
 
   const onMessage = (event: WebViewMessageEvent) => {
     try {
@@ -80,27 +82,27 @@ const NewPost = () => {
 
   const post: Post = {
     content: content,
-    media:media,
-    postID: editPost?.postID // 添加postID用于更新
+    media: media,
+    postID: editPost?.ID
   }
 
 
   const onSubmit=async ()=>{
-    if(!content&&media.length==0){
+    if(!content && media.length===0){
       Alert.alert('Post',"please add post content or choose an image/video")
       return
     }
     const myPost:getPost={
-      ID:post.postID as unknown as number,
-      User:user as userData,
-      Content:content,
-      LikeCount:[],
-      Media:media,
-      Comment:[],
-      CreatedAt:new Date().toISOString(),
-      UpdatedAt:new Date().toISOString(),
-      DeletedAt:null,
-      UserID:user?.ID as unknown as number,
+      ID: editPost?.ID || 0,
+      User: user as userData,
+      Content: content,
+      LikeCount: editPost?.LikeCount || [],
+      Media: media,
+      Comment: editPost?.Comment || [],
+      CreatedAt: editPost?.CreatedAt || new Date().toISOString(),
+      UpdatedAt: new Date().toISOString(),
+      DeletedAt: null,
+      UserID: user?.ID as unknown as number,
     }
 
     if(editPost){
@@ -416,15 +418,23 @@ const NewPost = () => {
             <Text style={styles.publicText}>Public</Text>
           </View>
         </View>
-        <WebView
-          ref={webViewRef}
-          source={{ html: editorInitialContent }}
-          style={styles.editor}
-          scrollEnabled={true}
-          hideKeyboardAccessoryView={true}
-          keyboardDisplayRequiresUserAction={false}
-          onMessage={onMessage}
-        />
+        <View style={styles.editorContainer}>
+          <WebView
+            ref={webViewRef}
+            source={{ html: editorInitialContent }}
+            style={styles.editor}
+            scrollEnabled={true}
+            hideKeyboardAccessoryView={true}
+            keyboardDisplayRequiresUserAction={false}
+            onMessage={onMessage}
+            onLoadEnd={() => setWebViewLoaded(true)}
+          />
+          {!webViewLoaded && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          )}
+        </View>
 
         {media.length > 0 && (
           <FlatList
@@ -473,6 +483,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 20,
+  },
+  editorContainer: {
+    position: 'relative',
+    height: hp(60),
   },
   editor: {
     height: hp(60),
@@ -545,7 +559,16 @@ const styles = StyleSheet.create({
     fontWeight:'500',
     color:theme.colors.textLight
   },
-
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  },
 });
 
 export default NewPost;

@@ -175,8 +175,8 @@ export const getPostDetails=async (postID:string)=>{
 
 
 interface commentData{
-    postID:string,
-    comment:string,
+    PostID:number,
+    Content:string,
 }
 
 export const postComment=async (data:commentData)=>{

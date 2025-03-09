@@ -13,7 +13,9 @@ const notification = () => {
   const router=useRouter()
   const getNotification=async()=>{
     let res= await fetchNotifications();
-    setNotifications(res)
+    if(res){
+      setNotifications(res)
+    }
   }
 
   useEffect(()=>{

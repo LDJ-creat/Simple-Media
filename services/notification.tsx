@@ -12,6 +12,9 @@ export interface fetchNotificationData{
 export const fetchNotifications = async (): Promise<fetchNotificationData[]> => {
     try {
       const response = await api.get('/notifications');
+      if(!response.data){
+        return []
+      }
       return response.data.map((n: any) => ({
         postID: n.post_id.toString(),
         userID: n.sender_id.toString(),
