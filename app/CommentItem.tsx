@@ -37,12 +37,13 @@ const CommentItem: React.FC<CommentItemProps> = ({item, canDelete,onDelete,highL
   return (
     <View  style={[styles.container,highLight&&styles.highLight]}>
       <Avatar
-          uri={item?.User?.Avatar||""}
+          uri={item?.User?.Avatar || ""}
+          size={hp(4)}
       />
       <View style={styles.content}>
         <View style={{flexDirection:'row',alignItems:'center',gap:3,justifyContent:'space-between'}}>
           <View style={styles.nameContainer}>
-            <Text style={styles.text}>{item?.Username}</Text>
+            <Text style={styles.text}>{item?.User?.Username}</Text>
             <Text>·</Text>
             <Text style={[styles.text,{color:theme.colors.textLight}]}>{createAt}</Text>
           </View>

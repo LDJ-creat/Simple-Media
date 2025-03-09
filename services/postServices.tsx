@@ -194,7 +194,7 @@ export const postComment=async (data:commentData)=>{
 //因为前端没有同步更新新创建的comment的id,所以这里使用postID来删除评论，userID在后端通过解析token获取,当然其实也可以在addComment的时候，后端返回comment的id，然后前端同步
 export const deleteComment=async (postID:string)=>{
     try{
-        await api.post(`/deleteComment/${postID}`)
+        await api.delete(`/deleteComment/${postID}`)
     }catch(error){
         console.log(error)
     }
