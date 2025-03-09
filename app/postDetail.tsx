@@ -29,7 +29,7 @@ const PostDetail = () => {
         await deletePost(postID as string)
         //home页面中通过订阅数据库变化，会自动更新,但这里采用传参刷新的方式
         deleteMyPost(postID as string)
-        router.navigate({pathname:'/home',params:{refresh:'true'}})
+        router.navigate({pathname:'/home',params:{deletePostId:postID}})
     }
 
     const onEditPost=async (post:getPost)=>{
@@ -49,9 +49,6 @@ const PostDetail = () => {
             const postResponse = await getPostDetails(postID as string)
             // 检查并正确解构数据
             const postData = postResponse.post || postResponse
-            console.log("获取到的原始数据:", postResponse)
-            console.log("处理后的帖子数据:", postData)
-            console.log("帖子中的评论数据:", postData?.Comment)
             
             // 确保评论数据包含完整的用户信息
             const commentsWithUser = postData?.Comment?.map((comment:any) => ({
@@ -63,7 +60,7 @@ const PostDetail = () => {
             setPost(postData)
             setComments(commentsWithUser)
             setLoading(false)
-            console.log("处理后的评论数据:", commentsWithUser)
+
         }
         fetchPost()
     },[])
@@ -175,7 +172,7 @@ const PostDetail = () => {
                 comments.map((comment)=>(
                     <CommentItem
                         item={comment}
-                        canDelete={post?.UserID===user?.ID||comment?.UserID===String(user?.ID)}
+                        canDelete={comment?.UserID===user?.ID}
                         onDelete={()=>onDeleteComment(comment)}
                         highLight={userID===comment?.UserID}
                         />

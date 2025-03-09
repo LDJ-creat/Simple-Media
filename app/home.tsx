@@ -23,9 +23,15 @@ const Home = () => {
     const [hasMore,setHasMore] = useState<boolean>(true)
     const [notificationsCount,setNotificationsCount] = useState<number>(0)
     const [cursor,setCursor]=useState<string|null>(null)
-    const {refresh,postID} = useLocalSearchParams()
+    const {refresh,postID,deletePostId} = useLocalSearchParams()
     const [newPost,setNewPost]=useState<getPost|null>(null)
     const myPosts = useMyPosts(state => state.myPosts)
+    useEffect(()=>{
+        if(deletePostId){
+            console.log("删除帖子:",deletePostId)
+            setPosts(prev=>prev.filter(post=>post.ID!==Number(deletePostId)))
+        }
+    },[deletePostId])
 
 
     const fetchPosts=async(currentCursor:string|null)=>{
@@ -59,6 +65,7 @@ const Home = () => {
     }
 
     const handleRefresh=()=>{
+        setNewPost(null)
         setIsRefreshing(true)
         setCursor(null)
         setPosts([])
@@ -107,9 +114,11 @@ const Home = () => {
                 try {
                     const data = JSON.parse(e.data);
                     if(data.type==="new_post"){
+                        console.log("收到新帖子:",data.post)
                         setNewPost(data.post)
                     }
                     if (data.type === 'notification') {
+                        console.log("收到通知:",data.count)
                         setNotificationsCount(prev => prev + data.count);
                     }
                 } catch (error) {

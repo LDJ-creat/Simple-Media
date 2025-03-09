@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert, Share as RNShare } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert, Share as RNShare, Platform } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
@@ -22,7 +22,12 @@ interface PostCardProps {
     onEditPost?:()=>void,
 }
 
-
+const API_BASE_URL = __DEV__ 
+  ? Platform.select({
+      ios: 'http://localhost:8080',
+      android: 'http://10.0.2.2:8080',
+    })
+  : 'http://你的生产服务器地址';
 
 const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
 
@@ -80,13 +85,18 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     }
 
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
-        const isVideo =item.includes('.mp4')||item.includes('.mov')||item.includes('VID');
+        const isVideo = item.includes('.mp4')||item.includes('.mov')||item.includes('VID');
+        
+        // 使用配置的 API 地址
+        const mediaUrl = item.startsWith('http') 
+          ? item 
+          : `${API_BASE_URL}${item}`;
     
         return (
           <View style={styles.mediaPreviewContainer}>   
             {isVideo ? (
               <Video
-                source={{ uri: item }}
+                source={{ uri: mediaUrl }}
                 style={styles.mediaPreview}
                 resizeMode={ResizeMode.COVER}
                 isLooping
@@ -95,7 +105,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
               />
             ) : (
               <Image
-                source={{ uri: item }}
+                source={{ uri: mediaUrl }}
                 style={styles.mediaPreview}
                 resizeMode="cover"
               />

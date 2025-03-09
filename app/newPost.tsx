@@ -494,7 +494,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mediaList: {
-    maxHeight: hp(15),
+    // maxHeight: hp(15),
+    height: hp(30),
+
   },
   mediaListContent: {
     paddingHorizontal: 10,
