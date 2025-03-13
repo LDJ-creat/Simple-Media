@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList,Alert, Share as RNShare, Platform } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, FlatList, Alert, Share as RNShare, Platform, Modal } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import {theme} from '@/constants/theme'
 import {hp,wp} from '@/helper/common'
@@ -10,6 +10,8 @@ import RenderHtml from "react-native-render-html"
 import { Video,ResizeMode } from 'expo-av'
 import { useUser } from '@/store/useUser'
 import { stripHtmlTags } from '@/helper/common'
+import ImageView from 'react-native-image-viewing'
+import VideoPlayer from '@/app/components/VideoPlayer'
 
 interface PostCardProps {
     item?: getPost;
@@ -84,16 +86,44 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
       ])
     }
 
+    const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
+    const mediaUrls = item?.Media?.map(media => {
+        const url = media.Uri.startsWith('http') 
+            ? media.Uri 
+            : `${API_BASE_URL}${media.Uri}`;
+        return {
+            uri: url,
+            type: media.Uri.includes('.mp4') || media.Uri.includes('.mov') || media.Uri.includes('VID') 
+                ? 'video' 
+                : 'image'
+        };
+    }) || [];
+
+    const handleMediaPress = (index: number) => {
+        const mediaItem = mediaUrls[index];
+        if (mediaItem.type === 'video') {
+            setSelectedVideo(mediaItem.uri);
+        } else {
+            setCurrentImageIndex(index);
+            setIsImageViewVisible(true);
+        }
+    };
+
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
         const isVideo = item.includes('.mp4')||item.includes('.mov')||item.includes('VID');
         
-        // 使用配置的 API 地址
         const mediaUrl = item.startsWith('http') 
           ? item 
           : `${API_BASE_URL}${item}`;
     
         return (
-          <View style={styles.mediaPreviewContainer}>   
+          <TouchableOpacity 
+            style={styles.mediaPreviewContainer}
+            onPress={() => handleMediaPress(index)}
+          >   
             {isVideo ? (
               <Video
                 source={{ uri: mediaUrl }}
@@ -110,14 +140,15 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
                 resizeMode="cover"
               />
             )}
-          </View>
+          </TouchableOpacity>
         );
-      };
-      const textStyle={
+    };
+
+    const textStyle={
         color:theme.colors.dark,
         fontSize:hp(1.75),
-      }
-      const tagStyles={
+    }
+    const tagStyles={
         div:textStyle,
         p:textStyle,
         span:textStyle,
@@ -128,8 +159,8 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
         h2:{
             color:theme.colors.dark
         }
-      }
-      const shadowStyles={
+    }
+    const shadowStyles={
         shadowOffset:{
             width:0,
             height:2
@@ -138,14 +169,16 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
         shadowRadius:6,
         elevation:1,     
         
-      }
-      const postTime = moment(item?.CreatedAt).format("YYYY-MM-DD HH:mm")
+    }
+    const postTime = moment(item?.CreatedAt).format("YYYY-MM-DD HH:mm")
 
-      const openPostDetails = () => {
+    const openPostDetails = () => {
         if(!showMoreIcons) return null;
         router.push({pathname:'/postDetail',params:{postID: String(item?.ID)}})
-      }
+    }
 
+    // 过滤出图片和视频
+    const images = mediaUrls.filter(media => media.type === 'image');
 
   return (
     <View style={[styles.container,hasShadow && shadowStyles]}>
@@ -224,6 +257,39 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
           </TouchableOpacity>
         </View>
       </View>
+
+      <ImageView
+        images={images.map(media => ({ uri: media.uri }))}
+        imageIndex={currentImageIndex}
+        visible={isImageViewVisible}
+        onRequestClose={() => setIsImageViewVisible(false)}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+        FooterComponent={({ imageIndex }) => (
+            <View style={styles.imageViewerFooter}>
+                <Text style={styles.imageViewerText}>
+                    {imageIndex + 1} / {images.length}
+                </Text>
+            </View>
+        )}
+      />
+
+      <Modal
+        visible={!!selectedVideo}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedVideo(null)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => setSelectedVideo(null)}
+          >
+            <Icon name="cancel" size={24} color="white" />
+          </TouchableOpacity>
+          {selectedVideo && <VideoPlayer uri={selectedVideo} />}
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -312,11 +378,38 @@ const styles = StyleSheet.create({
     mediaPreviewContainer: {
         position: 'relative',
         marginRight: 10,
+        borderRadius: theme.radius.lg,
+        overflow: 'hidden',
     },
     mediaPreview: {
         width: wp(30),
         height: wp(30),
         borderRadius: theme.radius.lg,
         backgroundColor: theme.colors.gray,
+    },
+    imageViewerFooter: {
+        height: 64,
+        backgroundColor: "#00000077",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    imageViewerText: {
+        fontSize: hp(1.8),
+        color: "#FFF",
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'black',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 1,
+        padding: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 20,
     },
 })

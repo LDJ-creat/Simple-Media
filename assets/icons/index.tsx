@@ -22,7 +22,9 @@ import reload from '@/assets/icons/reload'
 import send from '@/assets/icons/send'
 import { theme } from '../../constants/theme'
 import { SvgProps } from 'react-native-svg'
-
+import cancel from './cancel'
+import play from './play'
+import pause from './pause'
 interface IconProps extends SvgProps {
     name: keyof typeof icons;
     size?: number;
@@ -50,6 +52,9 @@ const icons = {
     share:share,
     reload:reload,
     send:send,
+    cancel:cancel,
+    play:play,
+    pause:pause,
 }
 
 const Icon = ({name, ...props}: IconProps) => {
