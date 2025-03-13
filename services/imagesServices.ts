@@ -5,9 +5,9 @@ export const getImageUrl = (imagePath: string) => {
         const API_BASE_URL = __DEV__ 
         ? Platform.select({
             ios: 'http://localhost:8080',
-            android: 'http://10.0.2.2:8080',
+            android: 'http://8.134.110.79:8081',
           })
-        : 'http://你的生产服务器地址';
+        : 'http://8.134.110.79:8081';
         return `${API_BASE_URL}${imagePath}`;
     }else{
         return require('@/assets/images/avatar.png')
