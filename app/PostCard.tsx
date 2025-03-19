@@ -25,40 +25,44 @@ interface PostCardProps {
 }
 
 const API_BASE_URL = __DEV__ 
-  ? Platform.select({
-      ios: 'http://localhost:8080',
-      android: 'http://8.134.110.79:8081',
-    })
-  : 'http://8.134.110.79:8081';
+  'http://8.134.110.79/api/media/v1'
+  // ? Platform.select({
+  //     // ios: 'http://localhost:8080',
+  //     android: 'http://8.134.110.79/api/media/v1',
+  //     // android: 'http://10.0.2.2:8080/api/v1',
+  //   })
+  // : 'http://8.134.110.79/api/media/v1';
+  // // : 'http://10.0.2.2:8080/api/v1';
+
 
 const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
 
     const user=useUser(state=>state.user)
-    const [likes,setLikes]=useState<string[]>([])
-    // const liked = likes.find(like => like === String(user?.ID)) ? true : false
-    const [liked,setLiked]=useState(()=>{
-      return likes.find(like => like === String(user?.ID)) ? true : false
-    })
+    const [likes,setLikes]=useState<number[]>([])
+    const [liked,setLiked]=useState(false)
     
     useEffect(() => {
         if (item?.LikeCount) {
             setLikes(item.LikeCount)
+            // 更新 liked 状态
+            setLiked(item.LikeCount.includes(user?.ID || 0))
         }
-    }, [item])
+    }, [item, user?.ID])
 
     const onLike =async () => {
         if (!user?.ID || !item?.ID) return;
         
         if(liked){
-            let updateLikes = likes.filter(like => like !== String(user.ID))
+            let updateLikes = likes.filter(like => like != user.ID)
             setLikes([...updateLikes])
             setLiked(false)
-            removePostLike(String(item.ID))
+            removePostLike(item.ID)
         }else{
-            setLikes([...likes, String(user.ID)])
+            setLikes([...likes, user.ID])
             setLiked(true)
-            createPostLike(String(item.ID))
+            createPostLike(item.ID)
         }
+        console.log('likes:', likes)
     }
 
     const share = async () => {

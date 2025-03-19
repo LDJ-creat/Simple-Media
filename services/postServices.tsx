@@ -24,16 +24,6 @@ export interface commentsData{
     User:userData,
 }
 
-// export interface fetchPost{
-//     postID:string,
-//     userID:string,
-//     userName:string,
-//     avatar:string,
-//     create_at:string,
-//     post:Post,
-//     postLikes:number,
-//     commentCount:number,
-// }
 export interface getPost {
     ID: number;
     CreatedAt: string;
@@ -41,19 +31,8 @@ export interface getPost {
     DeletedAt: null | string;
     UserID: number;
     Content: string;
-    LikeCount:string[];
+    LikeCount:number[];
     Media: mediaData[];
-    // User: {
-    //     ID: number;
-    //     CreatedAt: string;
-    //     UpdatedAt: string;
-    //     DeletedAt: null | string;
-    //     Username: string;
-    //     Email: string;
-    //     Phone: string;
-    //     Avatar: string;
-    //     Signature: string;
-    // };
     User:userData,
     Comment: commentsData[],
 }
@@ -125,7 +104,7 @@ export const updatePost=async (post:Post)=>{
     }
 }
 
-export const deletePost=async (postID:string)=>{
+export const deletePost=async (postID:number)=>{
     try{
         await api.delete(`/post/${postID}`)
     }catch(error){
@@ -134,7 +113,7 @@ export const deletePost=async (postID:string)=>{
 }
 
 
-export const createPostLike=async (postID:string)=>{
+export const createPostLike=async (postID:number)=>{
 
     try{
         await api.post(`/addLike/${postID}`)
@@ -143,7 +122,7 @@ export const createPostLike=async (postID:string)=>{
     }
 }
 
-export const removePostLike=async (postID: string)=>{
+export const removePostLike=async (postID: number)=>{
     try{
         await api.put(`/subLike/${postID}`)
     }catch (error){
@@ -153,21 +132,8 @@ export const removePostLike=async (postID: string)=>{
 
 
 
-export const getPostDetails=async (postID:string)=>{
-    // const postResponse:getPost={
-    //     postID:postID,
-    //     userID:"123",
-    //     userName:"张三",
-    //     avatar:"https://img.yzcdn.cn/vant/ipad.png",
-    //     create_at:"2024-01-01 12:00:00",
-    //     post:{
-    //         content:"",
-    //         images:[],
-    //         videos:[],
-    //     },
-    //     postLikes:[],
-    //     comments:[],
-    // }
+export const getPostDetails=async (postID:number)=>{
+
     const postResponse=await api.get(`/postDetails/${postID}`)
     return postResponse.data
 
@@ -192,7 +158,7 @@ export const postComment=async (data:commentData)=>{
 //     userID:string,
 // }
 //因为前端没有同步更新新创建的comment的id,所以这里使用postID来删除评论，userID在后端通过解析token获取,当然其实也可以在addComment的时候，后端返回comment的id，然后前端同步
-export const deleteComment=async (postID:string)=>{
+export const deleteComment=async (postID:number)=>{
     try{
         await api.delete(`/deleteComment/${postID}`)
     }catch(error){
@@ -201,35 +167,7 @@ export const deleteComment=async (postID:string)=>{
 }
 
 
-
-// export const onEditPost=async (post:Post)=>{
-//     const form=new FormData()
-//     post.images.forEach((item,index)=>{
-//         form.append("images",{
-//             uri:item.url,
-//             name:"image"+index+".jpg",
-//             type:"image/jpeg",
-//             id:item.id,
-//         } as any)
-//     })
-//     post.videos.forEach((item,index)=>{
-//         form.append("videos",{
-//             uri:item.url,
-//             name:"video"+index+".mp4",
-//             type:"video/mp4",
-//             id:item.id,
-//         } as any)
-//     })
-//     form.append("content",post.content)
-//     try{
-//         await api.post("/post",form)
-        
-//     }catch(error){
-//         console.log(error)
-//     }
-// }
-
-export const getMyPosts=async(userID:string)=>{
+export const getMyPosts=async()=>{
     const response:getPost[]=[]
     try{
 

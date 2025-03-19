@@ -57,10 +57,10 @@ const UpdateChecker = () => {
     // 应用启动时检查更新
     checkForUpdates();
 
-    // 每隔一段时间检查更新（例如每小时）
-    const interval = setInterval(checkForUpdates, 60 * 60 * 1000);
+    // 每隔一段时间检查更新（设置为一天）
+    const interval = setInterval(checkForUpdates, 24*60 * 60 * 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval);//组件卸载时清除定时器
   }, []);
 
   return null;

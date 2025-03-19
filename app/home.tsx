@@ -23,9 +23,7 @@ const Home = () => {
     const [hasMore,setHasMore] = useState<boolean>(true)
     const [notificationsCount,setNotificationsCount] = useState<number>(0)
     const [cursor,setCursor]=useState<string|null>(null)
-    const {refresh,postID,deletePostId} = useLocalSearchParams()
-    const [newPost,setNewPost]=useState<getPost|null>(null)
-    const myPosts = useMyPosts(state => state.myPosts)
+    const {deletePostId} = useLocalSearchParams()
     useEffect(()=>{
         if(deletePostId){
             console.log("删除帖子:",deletePostId)
@@ -64,27 +62,8 @@ const Home = () => {
         }
     }
 
-    const handleRefresh=()=>{
-        setNewPost(null)
-        setIsRefreshing(true)
-        setCursor(null)
-        setPosts([])
-        setHasMore(true)
-        fetchPosts(null)
-        setIsRefreshing(false)
-    }
 
-    // useEffect(()=>{
-    //     if(refresh){
-    //         handleRefresh()
-    //     }
-    //     if(postID){
-    //         const post=myPosts.find(post=>post.postID===postID)
-    //         if(post){
-    //             setNewPost(post)
-    //         }
-    //     }
-    // },[refresh,postID])
+
 
 
     useEffect(() => {
@@ -95,59 +74,87 @@ const Home = () => {
         loadNotifications();
     }, []);
 
+    const connectWebSocket = async () => {
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token:', token);
+        
+        if (!token) {
+            console.log('缺少 token ,无法建立连接');
+            return;
+        }
+
+        // 从 api 配置中获取基础 URL
+        const wsUrl = api.defaults.baseURL?.replace('http://', 'ws://');
+        console.log('WebSocket URL:', `${wsUrl}/ws?token=${token}`);
+        
+        if (!wsUrl) {
+            console.log('无法获取 WebSocket URL');
+            return;
+        }
+
+        const ws = new WebSocket(`${wsUrl}/ws?token=${token}`);
+        console.log('WebSocket 实例已创建');
+    
+        ws.onopen = () => {
+            console.log('WebSocket 连接成功');
+        };
+    
+        ws.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                console.log('收到 WebSocket 消息:', data);
+                if(data.type==="new_post"){
+                    console.log("收到新帖子:",data.post)
+                    setPosts(prev=>[data.post,...prev])
+                }
+                if (data.type === 'notification') {
+                    console.log("收到通知:",data.count)
+                    setNotificationsCount(prev => prev + data.count);
+                }
+            } catch (error) {
+                console.error('WebSocket 消息解析错误:', error);
+            }
+        };
+    
+        ws.onerror = (e) => {
+            console.error('WebSocket 错误:', e);
+        };
+    
+        ws.onclose = () => {
+            console.log('WebSocket 连接断开');
+            console.log("开始重连")
+            setTimeout(connectWebSocket, 3000);
+        };
+    
+        return ws;
+    };
+    
     useEffect(() => {
-        const connectWebSocket = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (!token || !user?.ID) return;
-
-            // 从 api 配置中获取基础 URL
-            const wsUrl = api.defaults.baseURL?.replace('http://', 'ws://');
-            if (!wsUrl) return;
-
-            const ws = new WebSocket(`${wsUrl}/ws?token=${token}`);
+        let ws: WebSocket | undefined;
         
-            ws.onopen = () => {
-                console.log('WebSocket 连接成功');
-            };
-        
-            ws.onmessage = (e) => {
-                try {
-                    const data = JSON.parse(e.data);
-                    if(data.type==="new_post"){
-                        console.log("收到新帖子:",data.post)
-                        setNewPost(data.post)
-                    }
-                    if (data.type === 'notification') {
-                        console.log("收到通知:",data.count)
-                        setNotificationsCount(prev => prev + data.count);
-                    }
-                } catch (error) {
-                    console.error('WebSocket 消息解析错误:', error);
-                }
-            };
-        
-            ws.onerror = (e) => {
-                console.error('WebSocket 错误:', e);
-            };
-        
-            ws.onclose = () => {
-                console.log('WebSocket 连接断开');
-                // 可以在这里添加重连逻辑
-                console.log("开始重连")
-                setTimeout(connectWebSocket, 3000);
-            };
-        
-            return () => {
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.close();
-                }
-            };
+        const initWebSocket = async () => {
+            ws = await connectWebSocket();
         };
         
-        connectWebSocket();
-    }, []); // 使用 ID 作为依赖
+        initWebSocket();
+        
+        // 清理函数
+        return () => {
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        };
+    }, [user?.ID]); // 添加 user?.ID 作为依赖
 
-
+    const handleRefresh=()=>{
+        setIsRefreshing(true)
+        setCursor(null)
+        setPosts([])
+        setHasMore(true)
+        fetchPosts(null)
+        setIsRefreshing(false)
+        connectWebSocket()
+    }
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
@@ -184,7 +191,8 @@ const Home = () => {
         </View>
 
         <FlatList
-            data={newPost ? [newPost, ...(posts || [])] : (posts || [])}
+            // data={newPost ? [newPost, ...(posts || [])] : (posts || [])}
+            data={posts}
             refreshControl={
                 <RefreshControl
                     refreshing={isRefreshing}

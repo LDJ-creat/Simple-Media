@@ -13,6 +13,7 @@ import { useUser } from '@/store/useUser'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import api from '@/services/api'
+import { Toast } from '@ant-design/react-native';
 
 const editProfile = () => {
   const router = useRouter();
@@ -26,14 +27,7 @@ const editProfile = () => {
     signature: user?.Signature || ''
   });
 
-//   useEffect(() => {
-//     (async () => {
-//       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//       if (status !== 'granted') {
-//         Alert.alert('Sorry, we need camera roll permissions to make this work!');
-//       }
-//     })();
-//   }, []);
+
 
   const pickImage = async () => {
     Alert.alert(
@@ -89,28 +83,63 @@ const editProfile = () => {
         Alert.alert("There should be a username")
         return
     }
-    const data = new FormData();
-    data.append('avatar', {
-      uri: formData.avatar,
-      type: 'image/jpeg',
-      name: 'avatar.jpg'
-    } as any);
 
-    data.append('userName', formData.userName);
+    const data = new FormData();
+    
+    // 处理头像文件,变化了才上传，同时注意格式处理
+    if (formData.avatar && formData.avatar !== user?.Avatar) {
+        try {
+            // 获取文件扩展名
+            const fileExtension = formData.avatar.split('.').pop()?.toLowerCase() || 'jpg';
+            const mimeType = fileExtension === 'png' ? 'image/png' : 'image/jpeg';
+            
+            // 创建文件对象
+            const file = {
+                uri: formData.avatar,
+                type: mimeType,
+                name: `avatar.${fileExtension}`
+            };
+            
+            console.log('准备上传的文件:', file);
+            data.append('avatar', file as any);
+        } catch (error) {
+            console.error('处理头像文件时出错:', error);
+            Alert.alert("Error", "Failed to process avatar image");
+            return;
+        }
+    }
+
+    // 添加其他字段
+    data.append('username', formData.userName);
     data.append('phone', formData.phone);
     data.append('signature', formData.signature);
+
     setLoading(true);
     try {
-      await api.put('/updateUser', data);
-      Alert.alert("Success", "Profile updated successfully");
-      router.back();
+        console.log('发送更新请求...');
+        console.log('表单数据:', {
+            username: formData.userName,
+            phone: formData.phone,
+            signature: formData.signature
+        });
+        const response = await api.put('/updateUser', data);
+        console.log('更新成功:', response.data);
+        
+        // 获取最新的用户信息
+        const userResponse = await api.get('/getUserInfo');
+        const newUserData = userResponse.data.userData;
+        
+        // 使用后端返回的新数据更新本地状态
+        updateUser(newUserData);
+        
+        Toast.success('Profile updated successfully',1);
+        router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile");
+        console.error('更新失败:', error);
+        Alert.alert("Error", "Failed to update profile");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-    // 更新本地状态
-    updateUser({...formData,ID:user?.ID});
   }
 
 

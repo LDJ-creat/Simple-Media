@@ -3,10 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // 创建axios实例
 const api = axios.create({
 //   baseURL: 'https://your-api-base-url.com', // 设置基础URL
-  // baseURL: 'http://10.0.2.2:8080/api/v1', // Android 模拟器
+  // baseURL: 'http://10.0.2.2:8080/api/media/v1', // Android 模拟器
   // 或
-  // baseURL: 'http://localhost:8080', // iOS 模拟器
-  baseURL: 'http://8.134.110.79:8081/api/v1', // 服务器
+  // baseURL: 'http://localhost:8080/api/v1', // iOS 模拟器
+  baseURL: 'http://8.134.110.79/api/media/v1', // 服务器
   timeout: 10000, // 超时时间
 });
 

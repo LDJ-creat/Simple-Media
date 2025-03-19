@@ -6,7 +6,7 @@ import { wp ,hp} from '@/helper/common'
 import { theme } from '@/constants/theme'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import Icon from '@/assets/icons'
-import { useRouter, Router } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import Avatar from '@/components/Avatar'
 import { userData } from '@/services/getUserData'
 import { useUser } from '@/store/useUser'
@@ -16,7 +16,7 @@ import PostCard from './PostCard'
 import api from '@/services/api'
 import useMyPosts from '@/store/useMyPosts'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: Router, handleLogout: () => void }) => {
+const UserHeader = ({user,router, handleLogout}: { user:userData|null,router: any, handleLogout: () => void }) => {
   
   return (
       <View style={{flex:1,backgroundColor:'white',paddingHorizontal:wp(4)}}>
@@ -69,23 +69,35 @@ const Profile = () => {
   const setUser = useUser(state => state.setUser);
   const user = useUser(state => state.user);
   const [cursor,setCursor]=useState<string|null>(null)
-  // const [posts,setPosts] = useState<getPost[]>([])
   const [hasMore,setHasMore] = useState<boolean>(true)
   const posts = useMyPosts(state => state.myPosts)
-  const setMyPosts = useMyPosts(state => state.setMyPosts)//全局管理myPosts
+  const setMyPosts = useMyPosts(state => state.setMyPosts)
   const clearMyPosts = useMyPosts(state => state.clearMyPosts)
 
-  useEffect(()=>{
-    const token=AsyncStorage.getItem('token')
-    if(token!=null && user?.ID==null){
-      const getUser=async()=>{
-        const response=await api.get('/getUserInfo')
-        setUser(response.data.userData)
-      }
-      getUser()
+  // 获取用户信息的函数
+  const getUserInfo = async () => {
+    try {
+      const response = await api.get('/getUserInfo');
+      setUser(response.data.userData);
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
     }
-  },[])
+  };
 
+  // // 页面显示时刷新用户信息
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     getUserInfo();
+  //   }, [])
+  // );
+
+  // 初始加载用户信息
+  useEffect(() => {
+    const token = AsyncStorage.getItem('token');
+    if (token != null) {
+      getUserInfo();
+    }
+  }, []);
 
   const fetchMyPosts=async(currentCursor:string|null)=>{
     try{
@@ -108,6 +120,9 @@ const Profile = () => {
   useEffect(()=>{
       if(posts.length===0 && hasMore){
           fetchMyPosts(null)
+      }else{
+        console.log('posts.length:', posts.length)
+        setCursor(String(posts.length-1))
       }
   },[])
 
@@ -122,6 +137,7 @@ const Profile = () => {
   const Logout = () => {
     setUser(null)
     clearMyPosts()
+    AsyncStorage.removeItem('token')
     router.push('/Login')
   }
   const handleLogout = async () => {
@@ -144,7 +160,7 @@ const Profile = () => {
   }
 
 
-  const handleDeletePost=async(postID:string)=>{
+  const handleDeletePost=async(postID:number)=>{
     await deletePost(postID)
   }
   return (
@@ -160,7 +176,7 @@ const Profile = () => {
                 <PostCard
                 item={item}
                 router={router}
-                onDeletePost={()=>handleDeletePost(String(item.ID))}
+                onDeletePost={()=>handleDeletePost(item.ID)}
                 />
             )}
             onEndReached={handleLoadMore}

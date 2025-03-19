@@ -119,11 +119,6 @@ const NewPost = () => {
     setContent('')  
     setMedia([])
     setLoading(false)
-    // router.navigate({pathname:'/home',params:{
-    //   refresh:'true',
-    //   postID:post.postID
-    // }})
-
     router.navigate({pathname:'/home'})
 
   }

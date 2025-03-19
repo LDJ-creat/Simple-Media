@@ -8,7 +8,7 @@ const BackButton = ({size=26,router}: {size?: number, router: Router}) => {
     <Pressable onPress={()=>router.back()} style={styles.button}>
         <Icon name="arrowLeft" size={size} strokeWidth={2.5} color="black"/>
     </Pressable>
-  )
+  ) 
 }
 
 export default BackButton

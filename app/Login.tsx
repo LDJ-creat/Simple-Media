@@ -47,6 +47,8 @@ const Login = () => {
         }
     }
 
+   
+
     return (
         <ScreenWrapper bg="white">
             <StatusBar style="dark"/>
@@ -75,7 +77,7 @@ const Login = () => {
                         value={password}
                     />
 
-                    <Text style={styles.forgotPassword}>Forgot Password?</Text>
+                    <Text style={styles.forgotPassword} onPress={()=>router.push('/resetPassword')}>Forgot Password?</Text>
                     <Button 
                         title="Login" 
                         onPress={submit} 

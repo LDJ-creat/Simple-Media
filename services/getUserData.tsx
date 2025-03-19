@@ -1,4 +1,7 @@
 import api from "@/services/api"
+import { Toast } from "@ant-design/react-native";
+import { router } from "expo-router";
+import { Alert } from "react-native";
 
 export interface userData {
     ID: number,
@@ -62,5 +65,47 @@ export const HandleSignUp=async (signUpData:signUpData)=>{
             console.error('8c. 其他错误:', error.message);
         }
         throw error;
+    }
+}
+
+export const HandleVerifyCode=async (Email:String)=>{
+    try{
+        // 方式一：将Email作为查询参数
+        const response = await api.get("/code", {
+            params: {
+                email: Email
+            }
+        });
+        console.log(response.data)
+        if(response.data.status==="success"){
+            Toast.success('Verification code sent successfully',1);
+        }
+    }catch(error:any){
+
+        Alert.alert('Failed to send verification code',error.response.data.message);
+        throw error
+
+    }
+
+}
+
+export interface resetPasswordData{
+    Email:string,
+    Code:string,
+    NewPassword:string
+}
+export const HandleResetPassword=async (resetPasswordData:resetPasswordData)=>{
+    try{
+        const response=await api.put("/password",resetPasswordData)
+        console.log(response.data)
+        if(response.data.status==="success"){
+            Toast.success('Password reset successfully',1);
+        }
+        router.push('/Login')
+    }catch(error:any){
+        // 使用后端返回的具体错误信息
+        const errorMessage = error.response?.data?.error || '密码重置失败';
+        Alert.alert('Failed to reset password',errorMessage);
+        throw error
     }
 }

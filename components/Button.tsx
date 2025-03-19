@@ -11,9 +11,10 @@ interface ButtonProps {
     onPress: () => void;
     loading?: boolean;
     hasShadow?: boolean;
+    disabled?: boolean;
 }
 
-const Button = ({buttonStyle, textStyle, title = '', onPress = () => {}, loading = false, hasShadow = true}: ButtonProps) => {
+const Button = ({buttonStyle, textStyle, title = '', onPress = () => {}, loading = false, hasShadow = true, disabled = false}: ButtonProps) => {
   const shadowStyle={
     shadowColor:theme.colors.dark,
     shadowOffset:{width:0,height:10},
@@ -30,7 +31,7 @@ const Button = ({buttonStyle, textStyle, title = '', onPress = () => {}, loading
     )
   }
     return (
-    <Pressable onPress={onPress} style={[styles.button,buttonStyle,hasShadow&&shadowStyle]}>
+    <Pressable onPress={onPress} style={[styles.button,buttonStyle,hasShadow&&shadowStyle,disabled&&{backgroundColor:'gray'}]}>
         <Text style={[styles.text,textStyle]}>{title}</Text>
     </Pressable>
   )
