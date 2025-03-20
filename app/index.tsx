@@ -12,31 +12,27 @@ const index = () => {
     const checkAuth=async()=>{
       const token=await AsyncStorage.getItem('token')
       if(token){
-        setTimeout(()=>{
-          router.push('./home')
-        },1500)
+        router.push('./home')
       }else{
-        setTimeout(()=>{
-          router.push('./Login')
-        },1500)
+        router.push('./Login')
       }
     }
     checkAuth()
   },[])
-  return (
-    <ScreenWrapper bg={theme.colors.primary}>
-      <View style={styles.container}>
-        <Text style={styles.text}>hello</Text>
-      </View>
-      {/* <Pressable onPress={()=>{
-        router.push('./home')
-      }}>
-        <Text>
-            welcome
-        </Text>
-      </Pressable> */}
-    </ScreenWrapper>
-  )
+  // return (
+  //   <ScreenWrapper bg={theme.colors.primary}>
+  //     <View style={styles.container}>
+  //       <Text style={styles.text}>hello</Text>
+  //     </View>
+  //     {/* <Pressable onPress={()=>{
+  //       router.push('./home')
+  //     }}>
+  //       <Text>
+  //           welcome
+  //       </Text>
+  //     </Pressable> */}
+  //   </ScreenWrapper>
+  // )
 }
 
 export default index
