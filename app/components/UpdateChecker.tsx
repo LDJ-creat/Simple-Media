@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import * as Updates from 'expo-updates';
+import Constants from 'expo-constants';
 
 const UpdateChecker = () => {
   const [isChecking, setIsChecking] = useState(false);
 
   const checkForUpdates = async () => {
+    // 在开发环境中跳过更新检查
+    if (__DEV__) {
+      console.log('开发环境中跳过更新检查');
+      return;
+    }
+
     if (isChecking) return;
     
     try {
@@ -54,13 +61,16 @@ const UpdateChecker = () => {
   };
 
   useEffect(() => {
-    // 应用启动时检查更新
-    checkForUpdates();
+    // 只在生产环境中检查更新
+    if (!__DEV__) {
+      // 应用启动时检查更新
+      checkForUpdates();
 
-    // 每隔一段时间检查更新（设置为一天）
-    const interval = setInterval(checkForUpdates, 24*60 * 60 * 1000);
+      // 每隔一段时间检查更新（设置为一天）
+      const interval = setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
 
-    return () => clearInterval(interval);//组件卸载时清除定时器
+      return () => clearInterval(interval);
+    }
   }, []);
 
   return null;
