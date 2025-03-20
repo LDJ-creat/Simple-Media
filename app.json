@@ -24,6 +24,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
+
           "backgroundColor": "#000000"
         }
       ],
@@ -35,7 +36,8 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 0,
-      "checkAutomatically": "ON_LOAD"
+      "checkAutomatically": "ON_LOAD",
+      "url": "https://u.expo.dev/6ea077c6-9ecf-46a8-82bf-9725ee9168e4"
     },
     "runtimeVersion": "1.0.0",
     "extra": {
