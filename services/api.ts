@@ -1,12 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '@/config/api';
+import { router } from 'expo-router';
 // 创建axios实例
 const api = axios.create({
-//   baseURL: 'https://your-api-base-url.com', // 设置基础URL
-  // baseURL: 'http://10.0.2.2:8080/api/media/v1', // Android 模拟器
-  // 或
-  // baseURL: 'http://localhost:8080/api/v1', // iOS 模拟器
-  baseURL: 'http://8.134.110.79/api/media/v1', // 服务器
+  baseURL: API_BASE_URL,
   timeout: 10000, // 超时时间
 });
 
@@ -58,15 +56,14 @@ api.interceptors.response.use(
     });
     // 统一错误处理
     if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          // 处理未授权
-          break;
-        case 404:
-          // 处理未找到
-          break;
-        default:
-          break;
+      if (error.response.status === 401) {
+        // Token 过期或无效，清除本地存储并重定向到登录页面
+        AsyncStorage.removeItem('token');
+        router.push('/Login');
+        // 可以在这里添加重定向到登录页面的逻辑
+      } else if (error.response.status === 404) {
+        // 处理未找到
+        console.log('未找到');
       }
     }
     return Promise.reject(error);

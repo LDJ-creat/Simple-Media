@@ -85,21 +85,14 @@ const UpdateChecker = () => {
   };
 
   useEffect(() => {
-    // 只在生产环境中检查更新
-    if (!__DEV__) {
-      console.log('当前环境:', Constants.expoConfig?.extra?.eas?.projectId);
-      console.log('当前版本:', Constants.expoConfig?.version);
-      console.log('运行时版本:', Constants.expoConfig?.runtimeVersion);
-      
-      // 应用启动时检查更新
-      checkForUpdates();
+    // 应用启动时检查更新
+    checkForUpdates();
 
       // 每隔一段时间检查更新（设置为一天）
       const interval = setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
 
       return () => clearInterval(interval);
-    }
-  }, []);
+    },[]);
 
   return null;
 };

@@ -5,13 +5,14 @@ import {hp,wp} from '@/helper/common'
 import Avatar from '@/components/Avatar'
 import {getPost,createPostLike,removePostLike} from "@/services/postServices"
 import moment from "moment"
-import Icon from  '@/assets/icons'
+import Icon from '@/assets/icons'
 import RenderHtml from "react-native-render-html"
 import { Video,ResizeMode } from 'expo-av'
 import { useUser } from '@/store/useUser'
 import { stripHtmlTags } from '@/helper/common'
 import ImageView from 'react-native-image-viewing'
 import VideoPlayer from '@/app/components/VideoPlayer'
+import { getFullUrl } from '@/config/api'
 
 interface PostCardProps {
     item?: getPost;
@@ -24,15 +25,7 @@ interface PostCardProps {
     onEditPost?:()=>void,
 }
 
-const API_BASE_URL = __DEV__ 
-  'http://8.134.110.79/api/media/v1'
-  // ? Platform.select({
-  //     // ios: 'http://localhost:8080',
-  //     android: 'http://8.134.110.79/api/media/v1',
-  //     // android: 'http://10.0.2.2:8080/api/v1',
-  //   })
-  // : 'http://8.134.110.79/api/media/v1';
-  // // : 'http://10.0.2.2:8080/api/v1';
+
 
 
 const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow = true,showMoreIcons=true,showDelete=false,onDeletePost,onEditPost}) => {
@@ -95,9 +88,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
     const mediaUrls = item?.Media?.map(media => {
-        const url = media.Uri.startsWith('http') 
-            ? media.Uri 
-            : `${API_BASE_URL}${media.Uri}`;
+        const url = getFullUrl(media.Uri);
         return {
             uri: url,
             type: media.Uri.includes('.mp4') || media.Uri.includes('.mov') || media.Uri.includes('VID') 
@@ -117,11 +108,8 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     };
 
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
-        const isVideo = item.includes('.mp4')||item.includes('.mov')||item.includes('VID');
-        
-        const mediaUrl = item.startsWith('http') 
-          ? item 
-          : `${API_BASE_URL}${item}`;
+        const isVideo = item.includes('.mp4') || item.includes('.mov') || item.includes('VID');
+        const mediaUrl = getFullUrl(item);
     
         return (
           <TouchableOpacity 
