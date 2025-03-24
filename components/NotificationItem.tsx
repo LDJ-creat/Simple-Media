@@ -17,7 +17,9 @@ const NotificationItem = ({item,router}:NotificationItemProps) => {
     const createdAt=moment(item?.createdAt).format('YYYY-MM-DD')
     const handleClick=()=>{
         //open detail page
-        router.push({pathname:"../app/postDetail",params:{
+        console.log(item.postID)
+        console.log(item.userID)
+        router.push({pathname:"/postDetail",params:{//注意这里的pathname直接写/postDetail接口，不需要写相对路径../app/postDetail
             postID:item?.postID,
             userID:item?.userID,
         }})

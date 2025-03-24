@@ -6,7 +6,7 @@ interface MyPostsState {
     setMyPosts: (posts: getPost[]) => void
     addMyPosts: (post: getPost) => void
     updateMyPosts: (post: getPost) => void
-    deleteMyPosts: (postID: string) => void
+    deleteMyPosts: (postID: number) => void
     clearMyPosts: () => void
 }
 
@@ -19,7 +19,7 @@ const useMyPosts = create<MyPostsState>((set) => ({
         })),
     deleteMyPosts: (postID) =>
         set((state) => ({
-            myPosts: state.myPosts.filter((post) => String(post.ID) !== postID),
+            myPosts: state.myPosts.filter((post) => post.ID !== postID),
         })),
     updateMyPosts: (updatedPost) =>
         set((state) => ({

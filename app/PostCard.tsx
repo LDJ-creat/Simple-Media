@@ -110,6 +110,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
     const renderMediaItem = ({ item, index }: { item: string; index: number }) => {
         const isVideo = item.includes('.mp4') || item.includes('.mov') || item.includes('VID');
         const mediaUrl = getFullUrl(item);
+        console.log('mediaUrl:', mediaUrl)
     
         return (
           <TouchableOpacity 
@@ -166,7 +167,7 @@ const PostCard: React.FC<PostCardProps> = ({item,commentsCount,router, hasShadow
 
     const openPostDetails = () => {
         if(!showMoreIcons) return null;
-        router.push({pathname:'/postDetail',params:{postID: String(item?.ID)}})
+        router.push({pathname:'/postDetail',params:{postID:item?.ID}})
     }
 
     // 过滤出图片和视频

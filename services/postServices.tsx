@@ -147,9 +147,12 @@ interface commentData{
 
 export const postComment=async (data:commentData)=>{
     try{
-        await api.post(`/addComment`,data)
+        const response = await api.post(`/addComment`,data)
+        console.log('Comment response:', response.data)
+        return response.data
     }catch(error){
-        console.log(error)
+        console.error('[PostComment Error]:', error)
+        throw error
     }
 }
 

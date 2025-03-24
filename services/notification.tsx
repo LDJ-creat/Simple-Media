@@ -16,10 +16,10 @@ export const fetchNotifications = async (): Promise<fetchNotificationData[]> => 
         return []
       }
       return response.data.map((n: any) => ({
-        postID: n.post_id.toString(),
-        userID: n.sender_id.toString(),
-        avatar: n.sender?.avatar || '',
-        name: n.sender?.username || 'Unknown',
+        postID: n.Post.ID,
+        userID: n.Sender.ID,
+        avatar: n.Sender?.Avatar || '',
+        name: n.Sender?.Username || 'Unknown',
         createdAt: n.created_at,
       }));
     } catch (error) {

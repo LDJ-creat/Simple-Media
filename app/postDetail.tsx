@@ -25,10 +25,10 @@ const PostDetail = () => {
     const deleteMyPost = useMyPosts(state => state.deleteMyPosts)
     
     
-    const onDeletePost=async (postID:string)=>{
-        await deletePost(postID as string)
+    const onDeletePost=async (postID:number)=>{
+        await deletePost(postID)
         //home页面中通过订阅数据库变化，会自动更新,但这里采用传参刷新的方式
-        deleteMyPost(postID as string)
+        deleteMyPost(postID)
         router.navigate({pathname:'/home',params:{deletePostId:postID}})
     }
 
@@ -46,7 +46,7 @@ const PostDetail = () => {
 
     useEffect(()=>{
         const fetchPost = async () => {
-            const postResponse = await getPostDetails(postID as string)
+            const postResponse = await getPostDetails(Number(postID))
             // 检查并正确解构数据
             const postData = postResponse.post || postResponse
             
@@ -75,29 +75,32 @@ const PostDetail = () => {
             PostID:Number(postID),
             Content:commentRef.current,
         }
-        let newComment={
-            PostID:postID as string,
-            UserID:String(user?.ID),
-            Content:commentRef.current,
-            Username:user?.Username,
-            CreatedAt:new Date().toISOString(),
-            User:user,
+        try {
+            console.log("Sending comment data:", data)
+            const response = await postComment(data)
+            console.log("Comment response:", response)
+            
+            if (response && response.comment) {
+                const newComment = {
+                    ...response.comment,
+                    User: user,
+                    Username: user.Username
+                }
+                setComments([...comments, newComment])
+                inputRef.current?.clear()
+                commentRef.current = ''
+            }
+            setPostCommentLoading(false)
+        } catch (error) {
+            console.error("Error posting comment:", error)
+            setPostCommentLoading(false)
         }
-        console.log("newComment:",data)
-        await postComment(data)
-
-        setPostCommentLoading(false)
-        setComments([...comments,newComment])
-        inputRef.current?.clear()
-        commentRef.current = ''
-
-
     }
 
     const onDeleteComment=async (comment:commentsData)=>{
         const newComments=comments.filter((c)=>c.UserID!==comment.UserID)
         setComments(newComments)
-        await deleteComment(postID as string)
+        await deleteComment(Number(postID))
 
     }
 
@@ -130,7 +133,7 @@ const PostDetail = () => {
             router={router} hasShadow={false}  
             showMoreIcons={false}
             showDelete={post?.UserID===user?.ID}
-            onDeletePost={()=>onDeletePost(postID as string)}
+            onDeletePost={()=>onDeletePost(Number(postID))}
             onEditPost={()=>onEditPost(post)}
         />
 
