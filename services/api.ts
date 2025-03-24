@@ -2,6 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@/config/api';
 import { router } from 'expo-router';
+
+console.log('API Base URL:', API_BASE_URL);
+
 // 创建axios实例
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,6 +14,7 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   async config => {
+    console.log('发送请求:', config.url);
     const token = await AsyncStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -32,7 +36,7 @@ api.interceptors.request.use(
     return config;
   },
   error => {
-    console.error('请求拦截器错误:', error);
+    console.error('请求错误:', error);
     return Promise.reject(error);
   }
 );
@@ -40,19 +44,14 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   response => {
-    console.log('收到响应:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data,
-      headers: response.headers
-    });
+    console.log('收到响应:', response.status, response.data);
     return response;
   },
   error => {
-    console.error('响应拦截器错误:', {
-      message: error.message,
-      response: error.response,
-      request: error.request
+    console.error('响应错误:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
     });
     // 统一错误处理
     if (error.response) {
